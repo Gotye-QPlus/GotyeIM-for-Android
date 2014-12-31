@@ -82,4 +82,14 @@
         <item name="android:focusable">true</item>
         <item name="android:background">#bfbfbf</item>
     </style>
+    
+      <style name="voice_dialog" parent="@android:style/Theme.Dialog">
+		<item name="android:windowFrame">@null</item><!--边框-->
+		<item name="android:windowIsFloating">true</item><!--是否浮现在activity之上-->
+		<item name="android:windowIsTranslucent">false</item><!--半透明-->
+		<item name="android:windowNoTitle">true</item>
+		<item name="android:background">#fff3f6f7</item>
+		<item name="android:windowBackground">@drawable/filled_box</item>
+		<item name="android:backgroundDimEnabled">true</item><!--模糊-->
+	</style>
 </resources>

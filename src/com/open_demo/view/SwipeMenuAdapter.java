@@ -65,7 +65,8 @@ public class SwipeMenuAdapter implements WrapperListAdapter,
 			layout = (SwipeMenuLayout) convertView;
 			layout.closeMenu();
 			layout.setPosition(position);
-			View view = mAdapter.getView(position, layout.getContentView(),
+			//View view = 
+			mAdapter.getView(position, layout.getContentView(),
 					parent);
 		}
 		return layout;

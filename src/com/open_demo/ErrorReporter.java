@@ -157,7 +157,8 @@ public class ErrorReporter implements Thread.UncaughtExceptionHandler {
      * 
      * @return Number of bytes available.
      */
-    public static long getAvailableInternalMemorySize() {
+    @SuppressWarnings("deprecation")
+	public static long getAvailableInternalMemorySize() {
         final File path = Environment.getDataDirectory();
         final StatFs stat = new StatFs(path.getPath());
         final long blockSize = stat.getBlockSize();
@@ -171,7 +172,8 @@ public class ErrorReporter implements Thread.UncaughtExceptionHandler {
      * 
      * @return Total number of bytes.
      */
-    public static long getTotalInternalMemorySize() {
+    @SuppressWarnings("deprecation")
+	public static long getTotalInternalMemorySize() {
         final File path = Environment.getDataDirectory();
         final StatFs stat = new StatFs(path.getPath());
         final long blockSize = stat.getBlockSize();
@@ -185,7 +187,8 @@ public class ErrorReporter implements Thread.UncaughtExceptionHandler {
      * @param context
      *            The application context.
      */
-    private void retrieveCrashData(final Context context) {
+    @SuppressWarnings("deprecation")
+	private void retrieveCrashData(final Context context) {
         try {
             final PackageManager pm = context.getPackageManager();
             PackageInfo pi;

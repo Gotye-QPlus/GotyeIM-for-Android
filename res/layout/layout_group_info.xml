@@ -188,7 +188,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="无需验证" />
+                        android:text="是否需要验证" />
 
                     <CheckBox
                         android:id="@+id/need_validate"

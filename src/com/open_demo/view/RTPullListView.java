@@ -1,9 +1,6 @@
 package com.open_demo.view;
 
-import java.util.Date;
-
-import com.open_demo.R;
-
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.util.AttributeSet;
 import android.util.Log;
@@ -21,7 +18,9 @@ import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import com.open_demo.R;
 
+@SuppressLint("InflateParams")
 public class RTPullListView extends ListView implements OnScrollListener {
 	private static final String TAG = "RTPullListView";
 
@@ -135,6 +134,7 @@ public class RTPullListView extends ListView implements OnScrollListener {
 
 	}
 
+	@SuppressLint("ClickableViewAccessibility")
 	@Override
 	public boolean onTouchEvent(MotionEvent event) {
 

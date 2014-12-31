@@ -10,7 +10,6 @@ public class StartServiceReceiver extends BroadcastReceiver {
 	public void onReceive(Context context, Intent arg1) {
 		// TODO Auto-generated method stub
 		Intent intent = new Intent(context, GotyeService.class);
-		intent.setAction(GotyeService.ACTION_INIT);
 		context.startService(intent);
 	}
 

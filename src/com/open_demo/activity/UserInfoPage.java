@@ -20,6 +20,7 @@ import com.open_demo.R;
 import com.open_demo.base.BaseActivity;
 import com.open_demo.main.MainActivity;
 import com.open_demo.util.BitmapUtil;
+import com.open_demo.util.ImageCache;
 import com.open_demo.util.ProgressDialogUtil;
 import com.open_demo.util.ToastUtil;
 
@@ -36,7 +37,7 @@ public class UserInfoPage extends BaseActivity implements OnClickListener {
 		requestWindowFeature(Window.FEATURE_NO_TITLE);
 		setContentView(R.layout.layout_user_info);
 		user = (GotyeUser) getIntent().getSerializableExtra("user");
-		api.addListerer(this);
+		api.addListener(this);
 		from = getIntent().getIntExtra("from", -1);
 		room = (GotyeRoom) getIntent().getSerializableExtra("room");
         GotyeUser tempUser=api.requestUserInfo(user.getName(), true);
@@ -80,8 +81,9 @@ public class UserInfoPage extends BaseActivity implements OnClickListener {
 		userIconView = (ImageView) findViewById(R.id.user_icon);
 		if (user.getIcon() != null) {
 			Bitmap bm = BitmapUtil.getBitmap(user.getIcon().path);
-			if (bm != null) {
+			if (bm == null) {
 				userIconView.setImageBitmap(bm);
+				ImageCache.getInstance().put(user.getName(), bm);
 			}
 		}
 	}
@@ -185,6 +187,8 @@ public class UserInfoPage extends BaseActivity implements OnClickListener {
 			startActivity(i);
 			finish();
 			ToastUtil.show(this, "成功删除好友：" + user.getName());
+		}else if(from==1){
+			finish();
 		}else{
 				ProgressDialogUtil.dismiss();
 				Intent i = new Intent(this, MainActivity.class);

@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import android.annotation.SuppressLint;
-import android.app.Fragment;
 import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
@@ -16,6 +15,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
+import android.widget.TextView;
 
 import com.gotye.api.GotyeAPI;
 import com.gotye.api.GotyeChatTarget;
@@ -23,11 +23,11 @@ import com.gotye.api.GotyeChatTargetType;
 import com.gotye.api.GotyeGroup;
 import com.gotye.api.GotyeRoom;
 import com.gotye.api.GotyeUser;
-import com.gotye.api.listener.DownloadListener;
 import com.open_demo.R;
 import com.open_demo.activity.ChatPage;
 import com.open_demo.activity.NotifyListPage;
 import com.open_demo.adapter.MessageListAdapter;
+import com.open_demo.base.BaseFragment;
 import com.open_demo.view.SwipeMenu;
 import com.open_demo.view.SwipeMenuCreator;
 import com.open_demo.view.SwipeMenuItem;
@@ -36,7 +36,7 @@ import com.open_demo.view.SwipeMenuListView.OnMenuItemClickListener;
 
 //此页面为回话历史页面，由客户端自己实现
 @SuppressLint("NewApi")
-public class MessageFragment extends Fragment implements DownloadListener {
+public class MessageFragment extends BaseFragment {
 	private SwipeMenuListView listView;
 	private MessageListAdapter adapter;
 
@@ -52,7 +52,7 @@ public class MessageFragment extends Fragment implements DownloadListener {
 	@Override
 	public void onActivityCreated(Bundle savedInstanceState) {
 		super.onActivityCreated(savedInstanceState);
-		GotyeAPI.getInstance().addListerer(this);
+		GotyeAPI.getInstance().addListener(this);
 		initView();
 	}
 
@@ -83,6 +83,12 @@ public class MessageFragment extends Fragment implements DownloadListener {
 				return false;
 			}
 		});
+		int state=api.getOnLineState();
+		if(state!=1){
+			setErrorTip(0);
+		}else{
+			setErrorTip(1);
+		}
 		updateList();
 		setListener();
 	}
@@ -92,13 +98,6 @@ public class MessageFragment extends Fragment implements DownloadListener {
 	}
 
 	private void createMenu2(SwipeMenu menu) {
-		// SwipeMenuItem item1 = new SwipeMenuItem(
-		// getActivity());
-		// item1.setBackground(new ColorDrawable(Color.rgb(0xE5, 0xE0,
-		// 0x3F)));
-		// item1.setWidth(dp2px(70));
-		// item1.setIcon(R.drawable.ic_action_about);
-		// menu.addMenuItem(item1);
 		SwipeMenuItem item2 = new SwipeMenuItem(getActivity());
 		item2.setBackground(new ColorDrawable(Color.rgb(0xF9, 0x3F, 0x25)));
 		item2.setWidth(dp2px(70));
@@ -173,13 +172,45 @@ public class MessageFragment extends Fragment implements DownloadListener {
 		super.onDestroy();
 
 	}
-
 	@Override
 	public void onDownloadMedia(int code, String path, String url) {
 		// TODO Auto-generated method stub
-		adapter.notifyDataSetChanged();
+		if(getActivity().isTaskRoot()){
+			adapter.notifyDataSetChanged();
+		}
 	}
 
+	@Override
+	public void onLogout(int code) {
+		setErrorTip(0);
+	}
+	@Override
+	public void onLogin(int code, GotyeUser currentLoginUser) {
+		setErrorTip(1);
+	}
+	@Override
+	public void onReconnecting(int code, GotyeUser currentLoginUser) {
+		setErrorTip(-1);
+	}
+	
+	private void setErrorTip(int code){
+//		code=api.getOnLineState();
+		if(code==1){
+			getView().findViewById(R.id.error_tip).setVisibility(View.GONE);
+		}else{
+			getView().findViewById(R.id.error_tip).setVisibility(View.VISIBLE);
+			if(code==-1){
+				getView().findViewById(R.id.loading).setVisibility(View.VISIBLE);
+				((TextView)getView().findViewById(R.id.showText)).setText("正在连接登陆...");
+				getView().findViewById(R.id.error_tip_icon).setVisibility(View.GONE);
+			}else{
+				getView().findViewById(R.id.loading).setVisibility(View.GONE);
+				((TextView)getView().findViewById(R.id.showText)).setText("当前未登陆或网络异常");
+				getView().findViewById(R.id.error_tip_icon).setVisibility(View.VISIBLE);
+			}
+		}
+	}
+	
 	private int dp2px(int dp) {
 		return (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dp,
 				getResources().getDisplayMetrics());

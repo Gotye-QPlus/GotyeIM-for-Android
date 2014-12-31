@@ -44,11 +44,19 @@
             android:src="@drawable/to_info_normal" />
     </RelativeLayout>
 
+    <include
+        android:id="@+id/error_tip"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/title_bar"
+        layout="@layout/error_tip"
+        android:visibility="visible" />
+
     <RelativeLayout
         android:id="@+id/real_time_talk_layout"
         android:layout_width="match_parent"
         android:layout_height="50dp"
-        android:layout_below="@+id/title_bar"
+        android:layout_below="@+id/error_tip"
         android:background="@drawable/title_bar_bg"
         android:gravity="center_vertical"
         android:visibility="gone" >
@@ -159,7 +167,7 @@
             android:paddingBottom="10dp"
             android:paddingTop="10dp"
             android:visibility="gone"
-            android:weightSum="3" >
+            android:weightSum="4" >
 
             <ImageView
                 android:id="@+id/to_gallery"
@@ -174,6 +182,14 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:src="@drawable/take_photo_selector" />
+
+            <ImageView
+                android:id="@+id/voice_to_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:src="@drawable/realtime_voice_selector"
+                android:visibility="gone" />
 
             <ImageView
                 android:id="@+id/real_time_voice_chat"

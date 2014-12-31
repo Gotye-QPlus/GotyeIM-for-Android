@@ -5,6 +5,7 @@ import java.util.List;
 import com.gotye.api.GotyeAPI;
 import com.gotye.api.GotyeUser;
 import com.gotye.api.listener.DownloadListener;
+import com.gotye.api.listener.LoginListener;
 import com.gotye.api.listener.UserListener;
 
 import android.annotation.SuppressLint;
@@ -12,7 +13,7 @@ import android.app.Fragment;
 
 @SuppressLint("NewApi")
 public class BaseFragment extends Fragment implements UserListener,
-		DownloadListener {
+		DownloadListener,LoginListener {
 
 	public GotyeAPI api=GotyeAPI.getInstance();
 	@Override
@@ -77,6 +78,24 @@ public class BaseFragment extends Fragment implements UserListener,
 
 	@Override
 	public void onGetProfile(int code, GotyeUser user) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void onLogout(int code) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void onLogin(int code, GotyeUser currentLoginUser) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void onReconnecting(int code, GotyeUser currentLoginUser) {
 		// TODO Auto-generated method stub
 		
 	}

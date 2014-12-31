@@ -1,13 +1,12 @@
 package com.open_demo.main;
 
-import java.util.List;
-
 import android.annotation.SuppressLint;
-import android.app.Fragment;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -26,11 +25,7 @@ import android.widget.TextView.OnEditorActionListener;
 import android.widget.Toast;
 
 import com.gotye.api.GotyeAPI;
-import com.gotye.api.GotyeGender;
 import com.gotye.api.GotyeUser;
-import com.gotye.api.listener.LoginListener;
-import com.gotye.api.listener.UserListener;
-import com.open_demo.LoginPage;
 import com.open_demo.R;
 import com.open_demo.base.BaseFragment;
 import com.open_demo.util.BitmapUtil;
@@ -42,7 +37,7 @@ public class SettingFragment extends BaseFragment{
 	private GotyeUser user;
 	private ImageView iconImageView;
 	private EditText nickName;
-
+	private EditText info;
 	private GotyeAPI api;
 
 	@SuppressLint("InflateParams")
@@ -57,15 +52,22 @@ public class SettingFragment extends BaseFragment{
 		// TODO Auto-generated method stub
 		super.onActivityCreated(savedInstanceState);
 		api = GotyeAPI.getInstance();
-		api.addListerer(this);
+		api.addListener(this);
 		user = api.getCurrentLoginUser();
 		api.requestUserInfo(user.name, true);
 		initView();
+		int state=api.getOnLineState();
+		if(state!=1){
+			setErrorTip(0);
+		}else{
+			setErrorTip(1);
+		}
 	}
 
 	private void initView() {
 		iconImageView = (ImageView) getView().findViewById(R.id.icon);
 		nickName = (EditText) getView().findViewById(R.id.nick_name);
+		info=(EditText) getView().findViewById(R.id.info_name);
 		Button btn = (Button) getView().findViewById(R.id.logout_btn);
 		btn.setText("退出(" + user.name + ")");
 		nickName.setImeOptions(EditorInfo.IME_ACTION_SEARCH);
@@ -78,10 +80,11 @@ public class SettingFragment extends BaseFragment{
 					if (!"".equals(text)) {
 						GotyeUser forModify=new GotyeUser(user.getName());
 						forModify.setNickname(text);
-						forModify.setInfo(user.getInfo());
+						forModify.setInfo(info.getText().toString().trim());
 						forModify.setGender(user.getGender());
 						String headPath="";
-						api.modifyUserInfo(forModify, headPath);
+					int code=api.requestModifyUserInfo(forModify, headPath);
+					Log.d("", ""+code);
 					}
 					return true;
 				}
@@ -93,6 +96,8 @@ public class SettingFragment extends BaseFragment{
 			@Override
 			public void onClick(View arg0) {
 				int code=api.logout();
+				int x=code;
+				Log.d("", "code"+code+""+x);
 			}
 		});
 		getView().findViewById(R.id.icon_layout).setOnClickListener(
@@ -132,12 +137,28 @@ public class SettingFragment extends BaseFragment{
 						api.setNotReceiveGroupMsg(arg1);
 					}
 				});
+		
+		SharedPreferences spf=getActivity().getSharedPreferences("fifter_cfg", Context.MODE_PRIVATE);
+		boolean fifter=spf.getBoolean("fifter", false);
+		CheckBox msgFifter = ((CheckBox) getView().findViewById(
+				R.id.msg_filter));
+		msgFifter.setChecked(fifter);
+		msgFifter
+		.setOnCheckedChangeListener(new OnCheckedChangeListener() {
+			
+			@Override
+			public void onCheckedChanged(CompoundButton arg0,
+					boolean arg1) {
+				SharedPreferences spf=getActivity().getSharedPreferences("fifter_cfg", Context.MODE_PRIVATE);
+				spf.edit().putBoolean("fifter",arg1).commit();
+			}
+		});
 		getView().findViewById(R.id.clear_cache).setOnClickListener(
 				new OnClickListener() {
 
 					@Override
 					public void onClick(View arg0) {
-						api.clearCache();
+						int code=api.clearCache();
 						Toast.makeText(getActivity(), "清理完成!",
 								Toast.LENGTH_SHORT).show();
 					}
@@ -159,11 +180,17 @@ public class SettingFragment extends BaseFragment{
 			}
 		}
 		nickName.setText(user.getNickname());
+		info.setText(user.getInfo());
 	}
 
 	private void takePic() {
-		Intent intent = new Intent(Intent.ACTION_GET_CONTENT, null);
-		intent.setType("image/*");
+//		Intent intent = new Intent(Intent.ACTION_GET_CONTENT, null);
+//		intent.setType("image/*");
+//		getActivity().startActivityForResult(intent, REQUEST_PIC);
+		Intent intent;
+		intent = new Intent(Intent.ACTION_PICK,
+				android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+		intent.setType("image/jpeg");
 		getActivity().startActivityForResult(intent, REQUEST_PIC);
 	}
 
@@ -185,7 +212,9 @@ public class SettingFragment extends BaseFragment{
 
 	@Override
 	public void onRequestUserInfo(int code, GotyeUser user) {
-		setUserInfo(user);
+		if(user!=null&&user.name.equals(this.user.name)){
+			setUserInfo(user);
+		}
 	}
 
 	@Override
@@ -205,6 +234,48 @@ public class SettingFragment extends BaseFragment{
 		forModify.setNickname(name);
 		forModify.setInfo(user.getInfo());
 		forModify.setGender(user.getGender());
-		api.modifyUserInfo(forModify,smallImagePath);
+		api.requestModifyUserInfo(forModify,smallImagePath);
+	}
+	@Override
+	public void onLogin(int code, GotyeUser currentLoginUser) {
+		// TODO Auto-generated method stub
+		setErrorTip(1);
+	}
+
+	@Override
+	public void onLogout(int code) {
+		if(code == 0){
+			return;
+		}
+		setErrorTip(0);
+	}
+
+	@Override
+	public void onReconnecting(int code, GotyeUser currentLoginUser) {
+		// TODO Auto-generated method stub
+		setErrorTip(-1);
+	}
+
+	private void setErrorTip(int code) {
+		if (code == 1) {
+			getView().findViewById(R.id.error_tip).setVisibility(View.GONE);
+		} else {
+			getView().findViewById(R.id.error_tip).setVisibility(View.VISIBLE);
+			if (code == -1) {
+				getView().findViewById(R.id.loading)
+						.setVisibility(View.VISIBLE);
+				((TextView) getView().findViewById(R.id.showText))
+						.setText("正在连接登陆...");
+				getView().findViewById(R.id.error_tip_icon).setVisibility(
+						View.GONE);
+			}else{
+				getView().findViewById(R.id.loading).setVisibility(View.GONE);
+				((TextView) getView().findViewById(R.id.showText))
+						.setText("当前未登陆或网络异常");
+				getView().findViewById(R.id.error_tip_icon).setVisibility(
+						View.VISIBLE);
+			}
+			
+		}
 	}
 }

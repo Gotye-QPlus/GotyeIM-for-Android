@@ -14,8 +14,8 @@ import com.gotye.api.PathUtil;
 
 public class BitmapUtil {
 	public static final int IMAGE_MAX_SIZE_LIMIT = 100;
-	private int mWidth;
-	private int mHeight;
+	//private int mWidth;
+	//private int mHeight;
 
 	public static String compressImage(String imagePath) {
 

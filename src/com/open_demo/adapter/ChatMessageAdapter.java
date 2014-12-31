@@ -26,11 +26,12 @@ import com.gotye.api.Media;
 import com.open_demo.R;
 import com.open_demo.activity.ChatPage;
 import com.open_demo.activity.ShowBigImage;
+import com.open_demo.activity.UserInfoPage;
 import com.open_demo.util.BitmapUtil;
+import com.open_demo.util.GotyeVoicePlayClickPlayListener;
 import com.open_demo.util.ImageCache;
 import com.open_demo.util.TimeUtil;
 import com.open_demo.util.ToastUtil;
-import com.open_demo.util.GotyeVoicePlayClickListener;
 
 public class ChatMessageAdapter extends BaseAdapter {
 
@@ -52,9 +53,7 @@ public class ChatMessageAdapter extends BaseAdapter {
 
 	private LayoutInflater inflater;
 	private String currentLoginName;
-
 	private GotyeAPI api;
-
 	public ChatMessageAdapter(ChatPage activity, List<GotyeMessage> messageList) {
 		this.chatPage = activity;
 		this.messageList = messageList;
@@ -64,7 +63,13 @@ public class ChatMessageAdapter extends BaseAdapter {
 	}
 
 	public void addMsgToBottom(GotyeMessage msg) {
-		messageList.add(msg);
+		int position = messageList.indexOf(msg);
+		if (position < 0) {
+			messageList.add(msg);
+			return;
+		}
+		messageList.remove(position);
+		messageList.add(position, msg);
 		notifyDataSetChanged();
 	}
 
@@ -86,15 +91,6 @@ public class ChatMessageAdapter extends BaseAdapter {
 			notifyDataSetChanged();
 		}
 	}
-
-	// public GotyeMessageProxy getLastMessage() {
-	// if (messageList == null || messageList.size() == 0) {
-	// return null;
-	// } else {
-	// return messageList.get(messageList.size() - 1);
-	// }
-	// }
-
 	public void addMessagesToTop(List<GotyeMessage> histMessages) {
 		messageList.addAll(0, histMessages);
 	}
@@ -110,7 +106,12 @@ public class ChatMessageAdapter extends BaseAdapter {
 
 	@Override
 	public GotyeMessage getItem(int position) {
-		return position >= 0 ? messageList.get(position) : null;
+		 if(position<0||position>=messageList.size()){
+			 return null;
+		 }else{
+			return messageList.get(position);
+		 }
+		 
 	}
 
 	@Override
@@ -164,6 +165,7 @@ public class ChatMessageAdapter extends BaseAdapter {
 						.findViewById(R.id.msg_status);
 				holder.tv_userId = (TextView) convertView
 						.findViewById(R.id.tv_userid);
+				holder.tv_delivered=(TextView) convertView.findViewById(R.id.tv_delivered);
 			} else if (message.getType() == GotyeMessageType.GotyeMessageTypeAudio) {
 				holder.iv = ((ImageView) convertView
 						.findViewById(R.id.iv_voice));
@@ -178,6 +180,8 @@ public class ChatMessageAdapter extends BaseAdapter {
 						.findViewById(R.id.tv_userid);
 				holder.iv_read_status = (ImageView) convertView
 						.findViewById(R.id.iv_unread_voice);
+				holder.extra_data=(TextView) convertView.findViewById(R.id.extra_data);
+				holder.tv_delivered=(TextView) convertView.findViewById(R.id.tv_delivered);
 			} else {
 				holder.pb = (ProgressBar) convertView
 						.findViewById(R.id.pb_sending);
@@ -190,15 +194,12 @@ public class ChatMessageAdapter extends BaseAdapter {
 						.findViewById(R.id.tv_chatcontent);
 				holder.tv_userId = (TextView) convertView
 						.findViewById(R.id.tv_userid);
+				holder.tv_delivered=(TextView) convertView.findViewById(R.id.tv_delivered);
 			}
 			convertView.setTag(holder);
 		} else {
 			holder = (ViewHolder) convertView.getTag();
 		}
-		if (holder.tv_userId != null) {
-			holder.tv_userId.setText(message.getSender().name);
-		}
-
 		switch (message.getType()) {
 		// 根据消息type显示item
 		case GotyeMessageTypeImage: // 图片
@@ -228,6 +229,16 @@ public class ChatMessageAdapter extends BaseAdapter {
 		// timestamp.setVisibility(View.GONE);
 		// }
 		// }
+		holder.head_iv.setOnClickListener(new OnClickListener() {
+			
+			@Override
+			public void onClick(View v) {
+				// TODO Auto-generated method stub
+				Intent i=new Intent(chatPage, UserInfoPage.class);
+				i.putExtra("user", (GotyeUser)message.getSender());
+				chatPage.startActivity(i);
+			}
+		});
 		setIcon(holder.head_iv, message.getSender().name);
 		return convertView;
 	}
@@ -236,26 +247,40 @@ public class ChatMessageAdapter extends BaseAdapter {
 			final ViewHolder holder, final int position, View convertView) {
 		holder.iv.setImageResource(R.drawable.ic_launcher);
 		setImageMessage(holder.iv, message, holder);
-		// setIcon(holder.head_iv, message.gotyeMessage.getSender().name);
 
 		if (getDirect(message) == MESSAGE_DIRECT_SEND) {
 			switch (message.getStatus()) {
 			case GotyeMessage.STATUS_SENT: // 发送成功
 				holder.pb.setVisibility(View.GONE);
 				holder.staus_iv.setVisibility(View.GONE);
+				if(holder.tv_delivered!=null){
+					holder.tv_delivered.setVisibility(View.VISIBLE);
+				}
 				break;
 			case GotyeMessage.STATUS_SENDFAILED: // 发送失败
 				holder.pb.setVisibility(View.GONE);
 				holder.staus_iv.setVisibility(View.VISIBLE);
+				if(holder.tv_delivered!=null){
+					holder.tv_delivered.setVisibility(View.GONE);
+				}
 				break;
 			case GotyeMessage.STATUS_SENDING: // 发送中
 				holder.pb.setVisibility(View.VISIBLE);
 				holder.staus_iv.setVisibility(View.GONE);
+				if(holder.tv_delivered!=null){
+					holder.tv_delivered.setVisibility(View.GONE);
+				}
 				break;
 			default:
 				holder.pb.setVisibility(View.GONE);
 				holder.staus_iv.setVisibility(View.GONE);
+				if(holder.tv_delivered!=null){
+					holder.tv_delivered.setVisibility(View.VISIBLE);
+				}
 			}
+		}else{
+				String name=message.getSender().name;
+				holder.tv_userId.setText(name);
 		}
 	}
 
@@ -283,19 +308,34 @@ public class ChatMessageAdapter extends BaseAdapter {
 			case GotyeMessage.STATUS_SENT: // 发送成功
 				holder.pb.setVisibility(View.GONE);
 				holder.staus_iv.setVisibility(View.GONE);
+				if(holder.tv_delivered!=null){
+					holder.tv_delivered.setVisibility(View.VISIBLE);
+				}
 				break;
 			case GotyeMessage.STATUS_SENDFAILED: // 发送失败
 				holder.pb.setVisibility(View.GONE);
 				holder.staus_iv.setVisibility(View.VISIBLE);
+				if(holder.tv_delivered!=null){
+					holder.tv_delivered.setVisibility(View.GONE);
+				}
 				break;
 			case GotyeMessage.STATUS_SENDING: // 发送中
 				holder.pb.setVisibility(View.VISIBLE);
 				holder.staus_iv.setVisibility(View.GONE);
+				if(holder.tv_delivered!=null){
+					holder.tv_delivered.setVisibility(View.GONE);
+				}
 				break;
 			default:
 				holder.pb.setVisibility(View.GONE);
 				holder.staus_iv.setVisibility(View.GONE);
+				if(holder.tv_delivered!=null){
+					holder.tv_delivered.setVisibility(View.VISIBLE);
+				}
 			}
+		}else{
+			String name=message.getSender().name;
+			holder.tv_userId.setText(name);
 		}
 	}
 
@@ -303,7 +343,7 @@ public class ChatMessageAdapter extends BaseAdapter {
 			final ViewHolder holder, final int position, View convertView) {
 		holder.tv.setText(TimeUtil.getVoiceTime(message.getMedia()
 				.getDuration()));
-		holder.iv.setOnClickListener(new GotyeVoicePlayClickListener(message,
+		holder.iv.setOnClickListener(new GotyeVoicePlayClickPlayListener(message,
 				holder.iv, this, chatPage));
 		boolean isPlaying = isPlaying(message);
 		if (isPlaying) {
@@ -322,6 +362,19 @@ public class ChatMessageAdapter extends BaseAdapter {
 				holder.iv.setImageResource(R.drawable.chatto_voice_playing);
 			}
 		}
+		
+		
+		if(holder.extra_data!=null){
+			if(message.getExtraData()!=null){
+				holder.extra_data.setVisibility(View.VISIBLE);
+				String extra=new String(message.getExtraData());
+				holder.extra_data.setText("语音内容:"+extra);
+			}else{
+				holder.extra_data.setVisibility(View.GONE);
+			}
+		} 
+		
+		
 		if (getDirect(message) == MESSAGE_DIRECT_RECEIVE) {
 			if (message.getStatus() == GotyeMessage.ACK_UNREAD) {// if
 				// holder.iv_read_status.setVisibility(View.INVISIBLE);
@@ -329,26 +382,42 @@ public class ChatMessageAdapter extends BaseAdapter {
 			} else {
 				holder.iv_read_status.setVisibility(View.INVISIBLE);
 			}
+			
+			String name=message.getSender().name;
+			holder.tv_userId.setText(name);
 			return;
 		}
-
+		
+		
 		// until here, deal with send voice msg
 		switch (message.getStatus()) {
 		case GotyeMessage.STATUS_SENT:
 			holder.pb.setVisibility(View.GONE);
 			holder.staus_iv.setVisibility(View.GONE);
+			if(holder.tv_delivered!=null){
+				holder.tv_delivered.setVisibility(View.VISIBLE);
+			}
 			break;
 		case GotyeMessage.STATUS_SENDFAILED:
 			holder.pb.setVisibility(View.GONE);
 			holder.staus_iv.setVisibility(View.VISIBLE);
+			if(holder.tv_delivered!=null){
+				holder.tv_delivered.setVisibility(View.GONE);
+			}
 			break;
 		case GotyeMessage.STATUS_SENDING:
 			holder.pb.setVisibility(View.VISIBLE);
 			holder.staus_iv.setVisibility(View.GONE);
+			if(holder.tv_delivered!=null){
+				holder.tv_delivered.setVisibility(View.GONE);
+			}
 			break;
 		default:
 			holder.pb.setVisibility(View.GONE);
 			holder.staus_iv.setVisibility(View.GONE);
+			if(holder.tv_delivered!=null){
+				holder.tv_delivered.setVisibility(View.VISIBLE);
+			}
 		}
 		switch (message.getMedia().getStatus()) {
 		case Media.MEDIA_STATUS_DOWNLOADING:
@@ -359,6 +428,7 @@ public class ChatMessageAdapter extends BaseAdapter {
 			break;
 		}
 	}
+	
 
 	private boolean isPlaying(GotyeMessage msg) {
 		long id = msg.getDbId();
@@ -498,6 +568,7 @@ public class ChatMessageAdapter extends BaseAdapter {
 		TextView tv_ack;
 		// 显示送达回执状态
 		TextView tv_delivered;
+		TextView extra_data;
 
 		TextView tv_file_name;
 		TextView tv_file_size;

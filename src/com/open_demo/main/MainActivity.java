@@ -4,16 +4,13 @@ import java.io.File;
 import java.io.IOException;
 
 import android.annotation.SuppressLint;
-import android.app.Activity;
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
 import android.app.NotificationManager;
 import android.content.Intent;
-import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
-import android.view.Gravity;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.Window;
@@ -28,14 +25,12 @@ import com.gotye.api.GotyeNotify;
 import com.gotye.api.GotyeStatusCode;
 import com.gotye.api.GotyeUser;
 import com.gotye.api.PathUtil;
-import com.gotye.api.listener.LoginListener;
-import com.gotye.api.listener.NotifyListener;
-import com.open_demo.GotyeService;
 import com.open_demo.LoginPage;
 import com.open_demo.R;
+import com.open_demo.base.BaseActivity;
 import com.open_demo.util.BeepManager;
 import com.open_demo.util.BitmapUtil;
-import com.open_demo.util.FileUtil;
+import com.open_demo.util.URIUtil;
 
 /**
  * 椤圭洰鐨勪富Activity锛屾墍鏈夌殑Fragment閮藉祵鍏ュ湪杩欓噷銆�
@@ -43,8 +38,7 @@ import com.open_demo.util.FileUtil;
  * @author guolin
  */
 @SuppressLint("NewApi")
-public class MainActivity extends Activity implements OnClickListener,
-		LoginListener, NotifyListener {
+public class MainActivity extends BaseActivity implements OnClickListener{
 	private MessageFragment messageFragment;
 	private ContactsFragment contactsFragment;
 	private SettingFragment settingFragment;
@@ -68,7 +62,7 @@ public class MainActivity extends Activity implements OnClickListener,
 		requestWindowFeature(Window.FEATURE_NO_TITLE);
 		api = GotyeAPI.getInstance();
 		setContentView(R.layout.layout_main);
-		api.addListerer(this);
+		api.addListener(this);
 		beep = new BeepManager(MainActivity.this);
 		beep.updatePrefs();
 		initViews();
@@ -227,20 +221,26 @@ public class MainActivity extends Activity implements OnClickListener,
 		if (code == GotyeStatusCode.CODE_FORCELOGOUT) {
 			Toast.makeText(this, "您的账号在另外一台设备上登录了！", Toast.LENGTH_SHORT).show();
 			Intent intent = new Intent(getBaseContext(), LoginPage.class);
+			intent.putExtra("logoutQuit", 100);
 			intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
 			startActivity(intent);
-		} else if (code == GotyeStatusCode.CODE_NETWORD_DISCONNECTED) {
+			finish();
+		} else if (code == GotyeStatusCode.CODE_NETWORK_DISCONNECTED) {
+
 			Toast.makeText(this, "您的账号掉线了！", Toast.LENGTH_SHORT).show();
+			/*
 			Intent intent = new Intent(getBaseContext(), LoginPage.class);
 			intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
-			startActivity(intent);
+			startActivity(intent);*/
 		}else{
 			Intent i = new Intent(this, LoginPage.class);
 			i.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
+			i.putExtra("logoutQuit", 100);
 			Toast.makeText(this, "退出登陆！", Toast.LENGTH_SHORT).show();
 			startActivity(i);
+			finish();
 		}
-		finish();
+		
 	}
 
 	@Override
@@ -345,7 +345,7 @@ public class MainActivity extends Activity implements OnClickListener,
 			if (data != null) {
 				Uri selectedImage = data.getData();
 				if (selectedImage != null) {
-					String path = FileUtil.uriToPath(this, selectedImage);
+					String path = URIUtil.uriToPath(this, selectedImage);
 					setPicture(path);
 				}
 			}

@@ -100,12 +100,12 @@ public class SearchAdapter extends BaseAdapter {
 
 	private void setIcon(ViewHolder viewHolder, GotyeUser user) {
 		if (user.getIcon() != null) {
-			ImageCache.getInstance().setIcom(viewHolder.icon,user.getIcon().path, user.getIcon().getUrl());
+			ImageCache.getInstance().setIcom(viewHolder.icon,user);
 		}  
 	}
 	private void setIcon(ViewHolder viewHolder, GotyeGroup group) {
 		if(group.getIcon()!=null){
-			ImageCache.getInstance().setIcom(viewHolder.icon,group.getIcon().path, group.getIcon().getUrl());
+			ImageCache.getInstance().setIcom(viewHolder.icon,group);
 		}
 	}
 

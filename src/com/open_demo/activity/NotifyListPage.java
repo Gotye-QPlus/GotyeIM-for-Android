@@ -9,7 +9,6 @@ import android.util.TypedValue;
 import android.view.View;
 import android.view.Window;
 
-import com.gotye.api.GotyeChatTarget;   
 import com.gotye.api.GotyeGroup;
 import com.gotye.api.GotyeNotify;
 import com.gotye.api.GotyeStatusCode;
@@ -36,7 +35,7 @@ public class NotifyListPage extends BaseActivity {
 		super.onCreate(savedInstanceState);
 		requestWindowFeature(Window.FEATURE_NO_TITLE);
 		setContentView(R.layout.layout_notify_page);
-		api.addListerer(this);
+		api.addListener(this);
 		listView = (SwipeMenuListView) findViewById(R.id.listview);
 		setListview();
 		loadData();

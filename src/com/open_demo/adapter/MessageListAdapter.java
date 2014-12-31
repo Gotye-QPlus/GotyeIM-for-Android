@@ -1,7 +1,9 @@
 package com.open_demo.adapter;
 
 import java.util.List;
+
 import android.annotation.SuppressLint;
+import android.graphics.Bitmap;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -10,6 +12,7 @@ import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
+
 import com.gotye.api.GotyeAPI;
 import com.gotye.api.GotyeChatTarget;
 import com.gotye.api.GotyeChatTargetType;
@@ -20,6 +23,7 @@ import com.gotye.api.GotyeRoom;
 import com.gotye.api.GotyeUser;
 import com.open_demo.R;
 import com.open_demo.main.MessageFragment;
+import com.open_demo.util.BitmapUtil;
 import com.open_demo.util.ImageCache;
 import com.open_demo.util.TimeUtil;
 
@@ -75,7 +79,8 @@ public class MessageListAdapter extends BaseAdapter {
 		}
 	}
 
-	@SuppressLint("NewApi")
+	@SuppressWarnings("deprecation")
+	@SuppressLint({ "NewApi", "InflateParams" })
 	@Override
 	public View getView(int arg0, View view, ViewGroup arg2) {
 		// TODO Auto-generated method stub
@@ -112,11 +117,13 @@ public class MessageListAdapter extends BaseAdapter {
 		} else {
 			String title = "", content = "";
 			viewHolder.content.setVisibility(View.VISIBLE);
+			//获取该session最后一条消息记录
 			GotyeMessage lastMsg = api.getLastMessage(session);
+			//time请*1000还原成正常时间
 			String lastMsgTime = TimeUtil
 					.dateToMessageTime(lastMsg.getDate() * 1000);
 			viewHolder.time.setText(lastMsgTime);
-			setIcon(viewHolder.icon, session);
+			
 			if (lastMsg.getType() == GotyeMessageType.GotyeMessageTypeText) {
 				content = "文本消息：" + lastMsg.getText();
 			} else if (lastMsg.getType() == GotyeMessageType.GotyeMessageTypeImage) {
@@ -130,6 +137,7 @@ public class MessageListAdapter extends BaseAdapter {
 			}
 
 			if (session.type == GotyeChatTargetType.GotyeChatTargetTypeUser) {
+				setIcon(viewHolder.icon, session.name);
 				GotyeUser user = api.requestUserInfo(session.name, false);
 				if (user != null) {
 					if (TextUtils.isEmpty(user.getNickname())) {
@@ -141,6 +149,7 @@ public class MessageListAdapter extends BaseAdapter {
 					title = "好友：" + session.name;
 				}
 			} else if (session.type == GotyeChatTargetType.GotyeChatTargetTypeRoom) {
+				setIcon(viewHolder.icon, String.valueOf(session.Id));
 				GotyeRoom room = api.requestRoomInfo(session.Id, false);
 				if (room != null) {
 					if (TextUtils.isEmpty(room.getRoomName())) {
@@ -154,6 +163,7 @@ public class MessageListAdapter extends BaseAdapter {
 
 			} else if (session.type == GotyeChatTargetType.GotyeChatTargetTypeGroup) {
 				GotyeGroup group = api.requestGroupInfo(session.Id, false);
+				setIcon(viewHolder.icon, String.valueOf(session.Id));
 				if (group != null) {
 					if (TextUtils.isEmpty(group.getGroupName())) {
 						title = "群：" + group.Id;
@@ -178,30 +188,58 @@ public class MessageListAdapter extends BaseAdapter {
 		return view;
 	}
 
-	private void setIcon(ImageView imgView, GotyeChatTarget target) {
-		if (target.type == GotyeChatTargetType.GotyeChatTargetTypeUser) {
-			GotyeUser user = api.requestUserInfo(target.name, true);
-			if (user == null) {
-				return;
-			} else if (user.getIcon() != null) {
-				ImageCache.getInstance().setIcom(imgView,
-						user.getIcon().getPath(), user.getIcon().getUrl());
+	private void setIcon(ImageView iconView, String name) {
+			Bitmap bmp = ImageCache.getInstance().get(name);
+			if (bmp != null) {
+				iconView.setImageBitmap(bmp);
+			} else {
+				GotyeUser user = api.requestUserInfo(name, false);
+				if (user != null && user.getIcon() != null) {
+					bmp = ImageCache.getInstance().get(user.getIcon().path);
+					if (bmp != null) {
+						iconView.setImageBitmap(bmp);
+						ImageCache.getInstance().put(name, bmp);
+					} else {
+						bmp = BitmapUtil.getBitmap(user.getIcon().getPath());
+						if (bmp != null) {
+							iconView.setImageBitmap(bmp);
+							ImageCache.getInstance().put(name, bmp);
+						} else {
+							iconView.setImageResource(R.drawable.mini_avatar_shadow);
+						}
+					}
+				} else {
+					iconView.setImageResource(R.drawable.mini_avatar_shadow);
+				}
 			}
-		} else if (target.type == GotyeChatTargetType.GotyeChatTargetTypeRoom) {
-			GotyeRoom room = api.requestRoomInfo(target.Id, false);
-			if (room != null && room.getIcon() != null) {
-				ImageCache.getInstance().setIcom(imgView,
-						room.getIcon().getPath(), room.getIcon().getUrl());
-			}
-		} else {
-			GotyeGroup group = api.requestGroupInfo(target.Id, false);
-			if (group == null) {
-				return;
-			} else if (group.getIcon() != null) {
-				ImageCache.getInstance().setIcom(imgView,
-						group.getIcon().getPath(), group.getIcon().getUrl());
-			}
-		}
+//		}
+		
+		
+		
+		
+//		if (target.type == GotyeChatTargetType.GotyeChatTargetTypeUser) {
+//			GotyeUser user = api.requestUserInfo(target.name, true);
+//			if (user == null) {
+//				return;
+//			} else if (user.getIcon() != null) {
+//				ImageCache.getInstance().setIcom(imgView,
+//						user.getIcon().getPath(), user.getIcon().getUrl());
+//			}
+//		} else if (target.type == GotyeChatTargetType.GotyeChatTargetTypeRoom) {
+//			GotyeRoom room = api.requestRoomInfo(target.Id, false);
+//			if (room != null && room.getIcon() != null) {
+//				ImageCache.getInstance().setIcom(imgView,
+//						room.getIcon().getPath(), room.getIcon().getUrl());
+//			}
+//		} else {
+//			GotyeGroup group = api.requestGroupInfo(target.Id, false);
+//			if (group == null) {
+//				return;
+//			} else if (group.getIcon() != null) {
+//				ImageCache.getInstance().setIcom(imgView,
+//						group.getIcon().getPath(), group.getIcon().getUrl());
+//			}
+//		}
 
 	}
 

@@ -1,5 +1,6 @@
 package com.open_demo.activity;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import android.content.Intent;
@@ -16,6 +17,7 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.TextView.OnEditorActionListener;
 
+import com.gotye.api.GotyeGender;
 import com.gotye.api.GotyeGroup;
 import com.gotye.api.GotyeUser;
 import com.open_demo.R;
@@ -47,13 +49,11 @@ public class SearchPage extends BaseActivity {
 			input.setText(keyword);
 			input.setSelection(keyword.length());
 		}
-		api.addListerer(this);
+		api.addListener(this);
 		if (searchType == 0) {
 			title.setText("搜索-好友");
-			api.requestSearchUserList(pageIndex, keyword, "", -1);
 		} else {
 			title.setText("搜索-群");
-			api.requestSearchGroup(keyword, pageIndex);
 		}
 
 		input.setImeOptions(EditorInfo.IME_ACTION_SEARCH);
@@ -62,14 +62,13 @@ public class SearchPage extends BaseActivity {
 			@Override
 			public boolean onEditorAction(TextView arg0, int arg1, KeyEvent arg2) {
 				// TODO Auto-generated method stub
-				if (arg1 == EditorInfo.IME_ACTION_SEARCH) {
+				if (arg1 == EditorInfo.IME_ACTION_SEARCH||arg1==0) {
 					if (adapter != null) {
 						adapter.clear();
 					}
 					keyword = input.getText().toString();
 					if (searchType == 0) {
-						api.requestSearchUserList(pageIndex, keyword, "",
-								-1);
+						api.requestSearchUserList(pageIndex, keyword, "",GotyeGender.Femal.ordinal());
 					} else {
 						api.requestSearchGroup(keyword, pageIndex);
 					}
@@ -87,6 +86,7 @@ public class SearchPage extends BaseActivity {
 					GotyeUser user = (GotyeUser) adapter.getItem(arg2);
 					Intent i = new Intent(SearchPage.this, UserInfoPage.class);
 					i.putExtra("user", user);
+					i.putExtra("from", 1);
 					startActivity(i);
 				} else {
 					GotyeGroup group = (GotyeGroup) adapter.getItem(arg2);
@@ -113,10 +113,19 @@ public class SearchPage extends BaseActivity {
 	@Override
 	public void onSearchUserList(int code, List<GotyeUser> mList, int pagerIndex) {
 		if (mList != null) {
+			List<GotyeUser> tempList = new ArrayList<GotyeUser>();
+				for(GotyeUser user: mList){
+					if(tempList.contains(user)){
+						continue;
+					}else{
+						tempList.add(user);
+					}
+				}
 			if (adapter == null) {
 				adapter = new SearchAdapter(getBaseContext(), mList);
 				listview.setAdapter(adapter);
 			} else {
+				adapter.clear();
 				adapter.addFriends(mList);
 			}
 		}
@@ -124,12 +133,12 @@ public class SearchPage extends BaseActivity {
 
 	@Override
 	public void onGetGroupList(int code, List<GotyeGroup> grouplist) {
-		// TODO Auto-generated method stub
 		if (grouplist != null) {
 			if (adapter == null) {
 				adapter = new SearchAdapter(grouplist, this);
 				listview.setAdapter(adapter);
 			} else {
+				adapter.clear();
 				adapter.addGroups(grouplist);
 			}
 		}

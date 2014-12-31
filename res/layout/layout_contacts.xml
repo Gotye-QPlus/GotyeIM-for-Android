@@ -31,11 +31,19 @@
             android:src="@drawable/add" />
     </RelativeLayout>
 
+    <include
+        android:id="@+id/error_tip"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/title_bar_layout"
+        layout="@layout/error_tip"
+        android:visibility="visible" />
+
     <LinearLayout
         android:id="@+id/serach_layout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/title_bar_layout"
+        android:layout_below="@+id/error_tip"
         android:background="@color/tab_bg_color"
         android:orientation="vertical"
         android:paddingLeft="20dp"
@@ -52,11 +60,41 @@
             android:singleLine="true" />
     </LinearLayout>
 
+    <LinearLayout
+        android:id="@+id/tab_f_b"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/serach_layout"
+        android:layout_marginLeft="20dp"
+        android:layout_marginRight="20dp"
+        android:orientation="horizontal"
+        android:padding="5dp" >
+
+        <TextView
+            android:id="@+id/friend_tab"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="我的好友"
+            android:textColor="@color/app_color"
+            android:textSize="20sp" />
+
+        <TextView
+            android:id="@+id/block_tab"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="黑名单"
+            android:textSize="20sp" />
+    </LinearLayout>
+
     <ListView
         android:id="@+id/listview"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_below="@+id/serach_layout"
+        android:layout_below="@+id/tab_f_b"
         android:listSelector="@drawable/contact_room_group_selector"
         android:paddingRight="20dp"
         android:scrollbars="none" >

@@ -38,7 +38,6 @@ import com.gotye.api.GotyeUser;
 import com.open_demo.R;
 import com.open_demo.adapter.GroupMemberAdapter;
 import com.open_demo.base.BaseActivity;
-import com.open_demo.main.MainActivity;
 import com.open_demo.util.BitmapUtil;
 import com.open_demo.util.PreferenceUitl;
 import com.open_demo.util.ProgressDialogUtil;
@@ -77,7 +76,7 @@ public class GroupInfoPage extends BaseActivity {
 			canModify = true;
 		}
 		setContentView(R.layout.layout_group_info);
-		api.addListerer(this);
+		api.addListener(this);
 		groupOwner = api.requestUserInfo(group.getOwnerAccount(), true);
 		initView();
 
@@ -149,8 +148,10 @@ public class GroupInfoPage extends BaseActivity {
 			@Override
 			public void onClick(View arg0) {
 				if (canModify) {
-					Intent intent = new Intent(Intent.ACTION_GET_CONTENT, null);
-					intent.setType("image/*");
+					Intent intent;
+					intent = new Intent(Intent.ACTION_PICK,
+							android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+					intent.setType("image/jpeg");
 					startActivityForResult(intent, REQUEST_PIC);
 				}
 
@@ -396,7 +397,7 @@ public class GroupInfoPage extends BaseActivity {
 	}
 
 	public void joinGroup(View view) {
-		if(!group.isNeedAuthentication()){
+		if(group.isNeedAuthentication()){
 			new AlertDialog.Builder(this).setMessage("是否申请加入该群？").setPositiveButton("申请", new DialogInterface.OnClickListener() {
 				@Override
 				public void onClick(DialogInterface dialog, int which) {
@@ -667,8 +668,8 @@ public class GroupInfoPage extends BaseActivity {
 	public void onReceiveReplayJoinGroup(int code, GotyeGroup group,
 			GotyeUser sender, String message,boolean isAgree) {
 		if(isAgree){
-			ProgressDialogUtil.showProgress(this, "群主同意了您的请求，您正在加入群...");
-			api.joinGroup(group);
+			//ProgressDialogUtil.showProgress(this, "群主同意了您的请求，您正在加入群...");
+			//api.joinGroup(group);
 //			if(members!=null){
 //				members.add(api.getCurrentLoginUser());
 //				adapter.notifyDataSetChanged();

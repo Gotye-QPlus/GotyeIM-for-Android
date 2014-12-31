@@ -70,7 +70,7 @@ public class MemberAdapter extends BaseAdapter {
 
 	private void setMemberIcon(ImageView iconView, GotyeUser member) {
 		if(member.getIcon()!=null){
-			ImageCache.getInstance().setIcom(iconView, member.getIcon().getPath(), member.getIcon().getUrl());
+			ImageCache.getInstance().setIcom(iconView,member);
 		}
 		
 	}

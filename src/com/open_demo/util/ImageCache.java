@@ -13,12 +13,17 @@
  */
 package com.open_demo.util;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import android.graphics.Bitmap;
 import android.support.v4.util.LruCache;
 import android.text.TextUtils;
 import android.widget.ImageView;
 
 import com.gotye.api.GotyeAPI;
+import com.gotye.api.GotyeGroup;
+import com.gotye.api.GotyeUser;
 import com.open_demo.R;
 
 public class ImageCache {
@@ -33,6 +38,7 @@ public class ImageCache {
           };
 	}
 
+	private static Map<String, Boolean> hasDownload=new  HashMap<String, Boolean>(); 
 	private static ImageCache imageCache = null;
 
 	public static synchronized ImageCache getInstance() {
@@ -45,21 +51,53 @@ public class ImageCache {
 	private LruCache<String, Bitmap> cache = null;
 	
 	
-	public void setIcom(ImageView iconView,String path,String urlForDownload){
-		 Bitmap bmp=ImageCache.getInstance().get(path);
+	public void setIcom(ImageView iconView,GotyeUser user){
+		 Bitmap bmp=ImageCache.getInstance().get(user.name);
    	  if(bmp!=null){
    		  iconView.setImageBitmap(bmp);
    	  }else{
-   		  bmp=BitmapUtil.getBitmap(path);
+   		  bmp=BitmapUtil.getBitmap(user.getIcon().getPath());
    		  if(bmp!=null){
    			iconView.setImageBitmap(bmp);
-   			put(path, bmp);
+   			put(user.name, bmp);
    		  }else{
+   			  
    			  iconView.setImageResource(R.drawable.head_icon_user);
-   			  GotyeAPI.getInstance().downloadMedia(urlForDownload);
+   			  if(user.getIcon().url==null){
+   				  return;
+   			  }
+   			  if(!hasDownload.containsKey(user.getIcon().url)){
+   				hasDownload.put(user.getIcon().url, true);
+   				 GotyeAPI.getInstance().downloadMedia(user.getIcon().url);
+   			  }
+   			 
    		  }
    	  }
    	
+	}
+	public void setIcom(ImageView iconView,GotyeGroup group){
+		Bitmap bmp=ImageCache.getInstance().get(group.Id+"");
+		if(bmp!=null){
+			iconView.setImageBitmap(bmp);
+		}else{
+			bmp=BitmapUtil.getBitmap(group.getIcon().getPath());
+			if(bmp!=null){
+				iconView.setImageBitmap(bmp);
+				put(group.Id+"", bmp);
+			}else{
+				
+				iconView.setImageResource(R.drawable.head_icon_user);
+				if(group.getIcon().url==null){
+					return;
+				}
+				if(!hasDownload.containsKey(group.getIcon().url)){
+					hasDownload.put(group.getIcon().url, true);
+					GotyeAPI.getInstance().downloadMedia(group.getIcon().url);
+				}
+				
+			}
+		}
+		
 	}
 	
 	/**

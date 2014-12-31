@@ -6,7 +6,6 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 
-import android.R;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.CompressFormat;
@@ -20,7 +19,6 @@ import android.graphics.PorterDuff.Mode;
 import android.graphics.PorterDuffXfermode;
 import android.graphics.Rect;
 import android.graphics.RectF;
-import android.graphics.drawable.Drawable;
 import android.graphics.drawable.NinePatchDrawable;
 import android.media.ExifInterface;
 import android.net.Uri;
@@ -49,7 +47,7 @@ public class ImageUtils {
 		
 		int width = dst.getWidth();
 		
-		Bitmap bitmap = src;
+		//Bitmap bitmap = src;
 		src = Bitmap.createScaledBitmap(src, width,
 				dst.getHeight(), true);
 		if(src == null){

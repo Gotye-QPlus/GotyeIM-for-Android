@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+
 import android.annotation.SuppressLint;
 import android.app.ProgressDialog;
 import android.content.Context;
@@ -24,6 +25,7 @@ import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
+
 import com.gotye.api.GotyeGroup;
 import com.gotye.api.GotyeUser;
 import com.gotye.api.PathUtil;
@@ -33,8 +35,8 @@ import com.open_demo.base.BaseActivity;
 import com.open_demo.bean.GotyeUserProxy;
 import com.open_demo.util.BitmapUtil;
 import com.open_demo.util.CharacterParser;
-import com.open_demo.util.FileUtil;
 import com.open_demo.util.PinyinComparator;
+import com.open_demo.util.URIUtil;
 import com.open_demo.view.SideBar;
 import com.open_demo.view.SideBar.OnTouchingLetterChangedListener;
 
@@ -63,7 +65,7 @@ public class CreateGroupSelectUser extends BaseActivity implements OnClickListen
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		requestWindowFeature(Window.FEATURE_NO_TITLE);
-		api.addListerer(this);
+		api.addListener(this);
 		from = getIntent().getIntExtra("from", 0);
 		hasInGroupMembers=getIntent().getStringArrayListExtra("member");
 		setContentView(R.layout.layout_select_user);
@@ -201,8 +203,10 @@ public class CreateGroupSelectUser extends BaseActivity implements OnClickListen
 			create();
 			break;
 		case R.id.set_group_head:
-			Intent intent = new Intent(Intent.ACTION_GET_CONTENT, null);
-			intent.setType("image/*");
+			Intent intent;
+			intent = new Intent(Intent.ACTION_PICK,
+					android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+			intent.setType("image/jpeg");
 			startActivityForResult(intent, 1);
 			break;
 		default:
@@ -216,7 +220,7 @@ public class CreateGroupSelectUser extends BaseActivity implements OnClickListen
 			if (data != null) {
 				Uri selectedImage = data.getData();
 				if (selectedImage != null) {
-					String path=FileUtil.uriToPath(this, selectedImage);
+					String path=URIUtil.uriToPath(this, selectedImage);
 					setPicture(path);
 				}
 			}

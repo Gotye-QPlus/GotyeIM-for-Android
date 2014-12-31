@@ -34,7 +34,6 @@ import android.webkit.MimeTypeMap;
 
 public class UriImage {
     private static final String TAG = "uri/image";
-    private static final boolean DEBUG = false;
     private static final boolean LOCAL_LOGV = false;
 
     private final Context mContext;

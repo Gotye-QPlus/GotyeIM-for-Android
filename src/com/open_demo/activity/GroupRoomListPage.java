@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.widget.AdapterView;
@@ -47,7 +48,7 @@ public class GroupRoomListPage extends BaseActivity {
 		title = (TextView) findViewById(R.id.title_tx);
 		noDataTip = (TextView) findViewById(R.id.no_data);
 		currentLoginName = api.getCurrentLoginUser().getName();
-		api.addListerer(this);
+		api.addListener(this);
 		Type = getIntent().getIntExtra("type", 0);
 		if (Type == 0) {
 			api.requestRoomList(pageIndex);
@@ -55,6 +56,17 @@ public class GroupRoomListPage extends BaseActivity {
 		} else {
 			api.requestGroupList();
 			title.setText("群列表");
+			findViewById(R.id.serach_layout).setVisibility(View.VISIBLE);
+			findViewById(R.id.contact_search_input).setOnClickListener(
+					new OnClickListener() {
+						@Override
+						public void onClick(View v) {
+							Intent toSreach = new Intent(
+									GroupRoomListPage.this, SearchPage.class);
+							toSreach.putExtra("search_type", 1);
+							startActivity(toSreach);
+						}
+					});
 		}
 		progress = (ProgressBar) findViewById(R.id.progress);
 		listView = (ListView) findViewById(R.id.listview);
@@ -146,93 +158,12 @@ public class GroupRoomListPage extends BaseActivity {
 		super.onDestroy();
 	}
 
-	class RoomGroupAdapter extends BaseAdapter {
-
-		@Override
-		public int getCount() {
-			// TODO Auto-generated method stub
-			return roomsGroups.size();
-		}
-
-		@Override
-		public Object getItem(int arg0) {
-			// TODO Auto-generated method stub
-			return roomsGroups.get(arg0);
-		}
-
-		@Override
-		public long getItemId(int arg0) {
-			// TODO Auto-generated method stub
-			return 0;
-		}
-
-		@Override
-		public View getView(int arg0, View arg1, ViewGroup arg2) {
-			// TODO Auto-generated method stub
-			View layout = getLayoutInflater().inflate(
-					R.layout.layout_group_room_item, null);
-			ImageView icon = (ImageView) layout.findViewById(R.id.icon);
-			TextView tx = (TextView) layout.findViewById(R.id.name);
-			GotyeChatTarget target = (GotyeChatTarget) getItem(arg0);
-			if (Type == 0) {
-				// room
-				tx.setText(target.name);
-			} else {
-				// group
-				tx.setText(target.name);
-			}
-			setIcon(icon, target);
-			return layout;
-		}
-
-		private void setIcon(ImageView iconView, GotyeChatTarget target) {
-			if (Type == 0) {
-				GotyeRoom room = (GotyeRoom) target;
-				if (room.getIcon() != null) {
-					Bitmap bmp = ImageCache.getInstance().get(
-							room.getIcon().path);
-					if (bmp != null) {
-						iconView.setImageBitmap(bmp);
-						return;
-					} else {
-						bmp = BitmapUtil.getBitmap(room.getIcon().getPath());
-						if (bmp != null) {
-							iconView.setImageBitmap(bmp);
-							ImageCache.getInstance().put(
-									room.getIcon().getPath(), bmp);
-							return;
-						}
-					}
-					api.downloadMedia(room.getIcon().getUrl());
-				}
-
-			} else {
-				GotyeGroup group = (GotyeGroup) target;
-				if (group.getIcon() != null) {
-					Bitmap bmp = ImageCache.getInstance().get(
-							group.getIcon().path);
-					if (bmp != null) {
-						iconView.setImageBitmap(bmp);
-						return;
-					} else {
-						bmp = BitmapUtil.getBitmap(group.getIcon().getPath());
-						if (bmp != null) {
-							iconView.setImageBitmap(bmp);
-							ImageCache.getInstance().put(
-									group.getIcon().getPath(), bmp);
-							return;
-						}
-					}
-					api.downloadMedia(group.getIcon().getUrl());
-				}
-			}
-		}
-
-	}
-
 	@Override
 	public void onGetRoomList(int code, List<GotyeRoom> gotyeroom) {
-		// TODO Auto-generated method stub
+
+		if (Type == 1) {
+			return;
+		}
 		if (gotyeroom != null && gotyeroom.size() > 0) {
 			if (roomsGroups == null) {
 				roomsGroups = new ArrayList<GotyeChatTarget>();
@@ -240,19 +171,28 @@ public class GroupRoomListPage extends BaseActivity {
 			for (GotyeRoom room : gotyeroom) {
 				roomsGroups.add(room);
 			}
-		}
-		if (adapter == null) {
-			adapter = new RoomGroupAdapter();
-			listView.setAdapter(adapter);
-			progress.setVisibility(View.GONE);
+			if (adapter == null) {
+				adapter = new RoomGroupAdapter();
+				listView.setAdapter(adapter);
+				progress.setVisibility(View.GONE);
+			} else {
+				adapter.notifyDataSetChanged();
+			}
 		} else {
-			adapter.notifyDataSetChanged();
+			progress.setVisibility(View.GONE);
+			noDataTip.setVisibility(View.VISIBLE);
+			if (Type == 0) {
+				noDataTip.setText("没有聊天室");
+			}
 		}
 
 	}
 
 	@Override
 	public void onGetGroupList(int code, List<GotyeGroup> grouplist) {
+		if (Type == 0) {
+			return;
+		}
 		if (grouplist != null && grouplist.size() > 0) {
 			if (roomsGroups == null) {
 				roomsGroups = new ArrayList<GotyeChatTarget>();
@@ -268,11 +208,7 @@ public class GroupRoomListPage extends BaseActivity {
 		} else {
 			progress.setVisibility(View.GONE);
 			noDataTip.setVisibility(View.VISIBLE);
-			if (Type == 0) {
-				noDataTip.setText("您没有在任何聊天室");
-			} else {
-				noDataTip.setText("您还没加入任何群");
-			}
+			noDataTip.setText("您还没加入任何群");
 		}
 
 	}
@@ -325,4 +261,83 @@ public class GroupRoomListPage extends BaseActivity {
 		}
 	}
 
+	class RoomGroupAdapter extends BaseAdapter {
+
+		@Override
+		public int getCount() {
+			// TODO Auto-generated method stub
+			return roomsGroups.size();
+		}
+
+		@Override
+		public Object getItem(int arg0) {
+			// TODO Auto-generated method stub
+			return roomsGroups.get(arg0);
+		}
+
+		@Override
+		public long getItemId(int arg0) {
+			// TODO Auto-generated method stub
+			return 0;
+		}
+
+		@Override
+		public View getView(int arg0, View arg1, ViewGroup arg2) {
+			// TODO Auto-generated method stub
+			View layout = getLayoutInflater().inflate(
+					R.layout.layout_group_room_item, null);
+			ImageView icon = (ImageView) layout.findViewById(R.id.icon);
+			TextView tx = (TextView) layout.findViewById(R.id.name);
+			GotyeChatTarget target = (GotyeChatTarget) getItem(arg0);
+			if (Type == 0) {
+				// room
+				tx.setText(target.name);
+			} else {
+				// group
+				tx.setText(target.name);
+			}
+			setIcon(icon, target);
+			return layout;
+		}
+
+		private void setIcon(ImageView iconView, GotyeChatTarget target) {
+			if (Type == 0) {
+				GotyeRoom room = (GotyeRoom) target;
+				if (room.getIcon() != null) {
+					Bitmap bmp = ImageCache.getInstance().get(target.Id + "");
+					if (bmp != null) {
+						iconView.setImageBitmap(bmp);
+						return;
+					} else {
+						bmp = BitmapUtil.getBitmap(room.getIcon().getPath());
+						if (bmp != null) {
+							iconView.setImageBitmap(bmp);
+							ImageCache.getInstance().put(room.Id + "", bmp);
+							return;
+						}
+					}
+					api.downloadMedia(room.getIcon().getUrl());
+				}
+
+			} else {
+				GotyeGroup group = (GotyeGroup) target;
+				if (group.getIcon() != null) {
+					Bitmap bmp = ImageCache.getInstance().get(group.Id + "");
+					if (bmp != null) {
+						iconView.setImageBitmap(bmp);
+						return;
+					} else {
+						bmp = BitmapUtil.getBitmap(group.getIcon().getPath());
+						if (bmp != null) {
+							iconView.setImageBitmap(bmp);
+							ImageCache.getInstance().put(group.Id + "", bmp);
+							return;
+						}
+					}
+					api.downloadMedia(group.getIcon().getUrl());
+				}
+			}
+		}
+
+	}
 }

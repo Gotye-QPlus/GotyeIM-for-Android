@@ -26,8 +26,8 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.Window;
 
+import com.gotye.api.FileUtil;
 import com.open_demo.R;
-import com.open_demo.util.FileUtil;
 import com.open_demo.view.photoview.PhotoView;
 
 /**

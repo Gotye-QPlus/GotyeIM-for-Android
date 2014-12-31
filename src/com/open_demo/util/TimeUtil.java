@@ -4,9 +4,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
-
-import com.gotye.api.GotyeMessageType;
-
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.text.format.DateFormat;
 
@@ -14,21 +12,24 @@ public class TimeUtil {
 	public TimeUtil(Context paramContext) {
 	}
 
+	@SuppressLint("SimpleDateFormat")
 	public static String currentLocalTimeString() {
 		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH-mm-ss");
 		return sdf.format(System.currentTimeMillis());
 	}
 
+	@SuppressLint("SimpleDateFormat")
 	public static String dateToMessageTime(long time) {
 		SimpleDateFormat sdf = new SimpleDateFormat("MM-dd HH:mm");
 		return sdf.format(new Date(time));
 	}
 
+	@SuppressLint("SimpleDateFormat")
 	public static String toLocalTimeString(long time) {
 		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH-mm-ss");
 		return sdf.format(System.currentTimeMillis());
 	}
-
+	@SuppressLint("SimpleDateFormat")
 	public static String currentLocalDateString() {
 		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
 		return sdf.format(System.currentTimeMillis());
@@ -40,12 +41,12 @@ public class TimeUtil {
 		localCalendar.setTimeInMillis(l);
 		return DateFormat.format("mm", localCalendar).toString();
 	}
-
+	@SuppressLint("SimpleDateFormat")
 	public static String currentSplitTimeString() {
 		SimpleDateFormat sdf = new SimpleDateFormat("yyyy.MM.dd");
 		return sdf.format(System.currentTimeMillis());
 	}
-
+	@SuppressLint("SimpleDateFormat")
 	public static String currentSplitTimeString(String time) {
 		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 		Date datetime;
@@ -149,7 +150,7 @@ public class TimeUtil {
 		localCalendar.setTimeInMillis(l);
 		return DateFormat.format("yyyy", localCalendar).toString();
 	}
-
+	@SuppressLint("SimpleDateFormat")
 	public static int compareTime(String startTime, String endTime) {
 		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm");
 		try {

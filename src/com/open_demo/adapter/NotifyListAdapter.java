@@ -1,25 +1,17 @@
 package com.open_demo.adapter;
 
 import java.util.List;
-
+import android.annotation.SuppressLint;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
-import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
-
-import com.gotye.api.GotyeAPI;
-import com.gotye.api.GotyeChatTarget;
-import com.gotye.api.GotyeGroup;
 import com.gotye.api.GotyeNotify;
 import com.gotye.api.GotyeNotifyType;
-import com.gotye.api.GotyeUser;
 import com.open_demo.R;
 import com.open_demo.activity.NotifyListPage;
-import com.open_demo.util.ProgressDialogUtil;
 
 public class NotifyListAdapter extends BaseAdapter {
 	private NotifyListPage notifyListPage;
@@ -86,6 +78,7 @@ public class NotifyListAdapter extends BaseAdapter {
 		return 0;
 	}
 
+	@SuppressLint("InflateParams")
 	@Override
 	public View getView(int arg0, View view, ViewGroup arg2) {
 		// TODO Auto-generated method stub

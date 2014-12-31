@@ -21,6 +21,7 @@ import com.open_demo.R;
 
 public class AnimUtil {
 
+	@SuppressWarnings("deprecation")
 	public static AnimationDrawable getSpeakBgAnim(Resources resources) {
 		AnimationDrawable speakBg = new AnimationDrawable();
 		BitmapDrawable item = new BitmapDrawable(BitmapFactory.decodeResource(

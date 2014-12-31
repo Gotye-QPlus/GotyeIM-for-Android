@@ -15,12 +15,13 @@ import com.gotye.api.GotyeUser;
 import com.gotye.api.listener.ChatListener;
 import com.gotye.api.listener.DownloadListener;
 import com.gotye.api.listener.GroupListener;
+import com.gotye.api.listener.LoginListener;
 import com.gotye.api.listener.NotifyListener;
 import com.gotye.api.listener.PlayListener;
 import com.gotye.api.listener.RoomListener;
 import com.gotye.api.listener.UserListener;
 
-public class BaseActivity extends Activity implements ChatListener,
+public class BaseActivity extends Activity implements LoginListener, ChatListener,
 		DownloadListener, GroupListener, UserListener, RoomListener,PlayListener,NotifyListener {
 	public GotyeAPI api=GotyeAPI.getInstance();
 	@Override
@@ -80,7 +81,7 @@ public class BaseActivity extends Activity implements ChatListener,
 	}
 
 	@Override
-	public void onGetHistoryMessageList(int code, List<GotyeMessage> list) {
+	public void onGetMessageList(int code, List<GotyeMessage> list) {
 		// TODO Auto-generated method stub
 		
 	}
@@ -348,7 +349,23 @@ public class BaseActivity extends Activity implements ChatListener,
 		// TODO Auto-generated method stub
 		
 	}
- 
- 
 
+	@Override
+	public void onLogout(int code) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void onLogin(int code, GotyeUser currentLoginUser) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void onReconnecting(int code, GotyeUser currentLoginUser) {
+		// TODO Auto-generated method stub
+		
+	}
+	 
 }

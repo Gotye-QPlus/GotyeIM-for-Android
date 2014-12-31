@@ -7,13 +7,13 @@ import java.util.List;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.drawable.AnimationDrawable;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.view.KeyEvent;
@@ -38,6 +38,7 @@ import android.widget.TextView.OnEditorActionListener;
 import android.widget.Toast;
 
 import com.gotye.api.GotyeChatTarget;
+import com.gotye.api.GotyeChatTargetType;
 import com.gotye.api.GotyeGroup;
 import com.gotye.api.GotyeMessage;
 import com.gotye.api.GotyeMessageType;
@@ -46,16 +47,21 @@ import com.gotye.api.GotyeStatusCode;
 import com.gotye.api.GotyeUser;
 import com.gotye.api.PathUtil;
 import com.gotye.api.WhineMode;
+import com.iflytek.cloud.ErrorCode;
+import com.iflytek.cloud.InitListener;
+import com.iflytek.cloud.SpeechRecognizer;
 import com.open_demo.R;
 import com.open_demo.adapter.ChatMessageAdapter;
 import com.open_demo.base.BaseActivity;
 import com.open_demo.main.MainActivity;
 import com.open_demo.util.CommonUtils;
-import com.open_demo.util.FileUtil;
+import com.open_demo.util.GotyeVoicePlayClickListener;
+import com.open_demo.util.GotyeVoicePlayClickPlayListener;
 import com.open_demo.util.ProgressDialogUtil;
 import com.open_demo.util.SendImageMessageTask;
 import com.open_demo.util.ToastUtil;
-import com.open_demo.util.GotyeVoicePlayClickListener;
+import com.open_demo.util.URIUtil;
+import com.open_demo.util.VoiceToTextUtil;
 import com.open_demo.view.RTPullListView;
 import com.open_demo.view.RTPullListView.OnRefreshListener;
 
@@ -68,12 +74,11 @@ public class ChatPage extends BaseActivity implements OnClickListener {
 
 	public static final int VOICE_MAX_TIME = 60 * 1000;
 	private RTPullListView pullListView;
-	private ChatMessageAdapter adapter;
-	private GotyeUser user;
-	private GotyeRoom room;
-	private GotyeGroup group;
+	public ChatMessageAdapter adapter;
+	private GotyeUser o_user,user;
+	private GotyeRoom o_room,room;
+	private GotyeGroup o_group,group;
 	private GotyeUser currentLoginUser;
-
 	private ImageView voice_text_chage;
 	private Button pressToVoice;
 	private EditText textMessage;
@@ -83,7 +88,7 @@ public class ChatPage extends BaseActivity implements OnClickListener {
 	private PopupWindow menuWindow;
 	private AnimationDrawable anim;
 	public int chatType = 0;
-
+       
 	private View realTalkView;
 	private TextView realTalkName, stopRealTalk;
 	private AnimationDrawable realTimeAnim;
@@ -95,38 +100,60 @@ public class ChatPage extends BaseActivity implements OnClickListener {
 	public static final int IMAGE_MAX_SIZE_LIMIT = 1024 * 1024;
 	public static final int Voice_MAX_TIME_LIMIT = 60 * 1000;
 	private long playingId;
-
 	private TextView title;
+	private SpeechRecognizer mSpeech;
+	public InitListener mInitListener = new InitListener() {
+
+		@Override
+		public void onInit(int code) {
+			if (code != ErrorCode.SUCCESS) {
+				Toast.makeText(ChatPage.this, "讯飞初始化失败，状态码：" + code,
+						Toast.LENGTH_SHORT).show();
+				return;
+			}
+		}
+	};
+
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		requestWindowFeature(Window.FEATURE_NO_TITLE);
 		setContentView(R.layout.gotye_activity_chat);
+		mSpeech = SpeechRecognizer.createRecognizer(this, mInitListener);
 		currentLoginUser = api.getCurrentLoginUser();
-		api.addListerer(this);
-		user = (GotyeUser) getIntent().getSerializableExtra("user");
-		room = (GotyeRoom) getIntent().getSerializableExtra("room");
-		group = (GotyeGroup) getIntent().getSerializableExtra("group");
+		api.addListener(this);
+		o_user=user = (GotyeUser) getIntent().getSerializableExtra("user");
+		o_room=room = (GotyeRoom) getIntent().getSerializableExtra("room");
+		o_group=group = (GotyeGroup) getIntent().getSerializableExtra("group");
 		initView();
-		if (chatType==0) {
+		if (chatType == 0) {
 			api.activeSession(user);
 			loadData();
-		} else if (chatType==1) {
-			int code=api.enterRoom(room);
-			if(code==GotyeStatusCode.CODE_OK){
+		} else if (chatType == 1) {
+			int code = api.enterRoom(room);
+			if (code == GotyeStatusCode.CODE_OK) {
 				api.activeSession(room);
 				loadData();
 				api.getLocalMessages(room, true);
-				GotyeRoom temp=api.requestRoomInfo(room.Id, true);
-				if(temp!=null&&!TextUtils.isEmpty(temp.getRoomName())){
-					title.setText("聊天室："+temp.getRoomName());
+				GotyeRoom temp = api.requestRoomInfo(room.Id, true);
+				if (temp != null && !TextUtils.isEmpty(temp.getRoomName())) {
+					title.setText("聊天室：" + temp.getRoomName());
 				}
-			}else{
+			} else {
 				ProgressDialogUtil.showProgress(this, "正在进入房间...");
 			}
-		} else if (chatType==2) {
+		} else if (chatType == 2) {
 			api.activeSession(group);
 			loadData();
+		}
+		SharedPreferences spf=getSharedPreferences("fifter_cfg", Context.MODE_PRIVATE);
+		boolean fifter=spf.getBoolean("fifter", false);
+		api.enableTextFilter(GotyeChatTargetType.values()[chatType], fifter);
+		int state=api.getOnLineState();
+		if(state!=1){
+			setErrorTip(0);
+		}else{
+			setErrorTip(1);
 		}
 	}
 
@@ -142,29 +169,30 @@ public class ChatPage extends BaseActivity implements OnClickListener {
 		stopRealTalk = (TextView) realTalkView
 				.findViewById(R.id.stop_real_talk);
 		stopRealTalk.setOnClickListener(this);
-		
+
 		if (user != null) {
 			chatType = 0;
 			title.setText("和 " + user.name + " 聊天");
 		} else if (room != null) {
 			chatType = 1;
-			title.setText("聊天室："+room.getRoomID());
+			title.setText("聊天室：" + room.getRoomID());
 		} else if (group != null) {
 			chatType = 2;
-			String titleText=null;
-			if(!TextUtils.isEmpty(group.getGroupName())){
-				titleText=group.getGroupName();
-			}else{
-				GotyeGroup temp=api.requestGroupInfo(group.getGroupID(), true);
-				if(temp!=null&&!TextUtils.isEmpty(temp.getGroupName())){
-					titleText=temp.getGroupName();
-				}else{
-					titleText=String.valueOf(group.getGroupID());
+			String titleText = null;
+			if (!TextUtils.isEmpty(group.getGroupName())) {
+				titleText = group.getGroupName();
+			} else {
+				GotyeGroup temp = api
+						.requestGroupInfo(group.getGroupID(), true);
+				if (temp != null && !TextUtils.isEmpty(temp.getGroupName())) {
+					titleText = temp.getGroupName();
+				} else {
+					titleText = String.valueOf(group.getGroupID());
 				}
 			}
-			title.setText("群："+titleText);
+			title.setText("群：" + titleText);
 		}
-		 
+
 		voice_text_chage = (ImageView) findViewById(R.id.send_voice);
 		pressToVoice = (Button) findViewById(R.id.press_to_voice_chat);
 		textMessage = (EditText) findViewById(R.id.text_msg_input);
@@ -173,6 +201,8 @@ public class ChatPage extends BaseActivity implements OnClickListener {
 
 		moreTypeLayout.findViewById(R.id.to_gallery).setOnClickListener(this);
 		moreTypeLayout.findViewById(R.id.to_camera).setOnClickListener(this);
+		moreTypeLayout.findViewById(R.id.voice_to_text)
+				.setOnClickListener(this);
 		moreTypeLayout.findViewById(R.id.real_time_voice_chat)
 				.setOnClickListener(this);
 
@@ -206,11 +236,9 @@ public class ChatPage extends BaseActivity implements OnClickListener {
 					}
 
 					if (chatType == 0) {
-						api.startTalk(user, WhineMode.DEFAULT, false,
-								60 * 1000);
+						api.startTalk(user, WhineMode.DEFAULT, false, 60 * 1000);
 					} else if (chatType == 1) {
-						api.startTalk(room, WhineMode.DEFAULT, false,
-								60 * 1000);
+						api.startTalk(room, WhineMode.DEFAULT, false, 60 * 1000);
 					} else if (chatType == 2) {
 						api.startTalk(group, WhineMode.DEFAULT, false,
 								60 * 1000);
@@ -221,22 +249,19 @@ public class ChatPage extends BaseActivity implements OnClickListener {
 					if (onRealTimeTalkFrom == 0) {
 						return false;
 					}
-					Log.d("chat_page",
-							"onTouch action=ACTION_UP" + event.getAction());
+					 
 					// if (onRealTimeTalkFrom > 0) {
 					// return false;
 					// }
 					api.stopTalk();
-					Log.d("chat_page",
-							"after stopTalk action=" + event.getAction());
+					 
 					pressToVoice.setText("按住 说话");
 					break;
 				case MotionEvent.ACTION_CANCEL:
 					if (onRealTimeTalkFrom == 0) {
 						return false;
 					}
-					Log.d("chat_page",
-							"onTouch action=ACTION_CANCEL" + event.getAction());
+					 
 					// if (onRealTimeTalkFrom > 0) {
 					// return false;
 					// }
@@ -244,8 +269,7 @@ public class ChatPage extends BaseActivity implements OnClickListener {
 					pressToVoice.setText("按住 说话");
 					break;
 				default:
-					Log.d("chat_page",
-							"onTouch action=default" + event.getAction());
+					 
 					break;
 				}
 				return false;
@@ -261,86 +285,90 @@ public class ChatPage extends BaseActivity implements OnClickListener {
 		if (!TextUtils.isEmpty(text)) {
 			GotyeMessage toSend;
 			if (chatType == 0) {
-				toSend = GotyeMessage.createTextMessage(currentLoginUser, user,
+				toSend = GotyeMessage.createTextMessage(currentLoginUser, o_user,
 						text);
 			} else if (chatType == 1) {
-				toSend = GotyeMessage.createTextMessage(currentLoginUser, room,
+				toSend = GotyeMessage.createTextMessage(currentLoginUser, o_room,
 						text);
 			} else {
 				toSend = GotyeMessage.createTextMessage(currentLoginUser,
-						group, text);
+						o_group, text);
 			}
-			String extraStr=null;
-			if(text.contains("#")){
-				String[] temp=text.split("#");
-				if(temp.length>1){
-					extraStr=temp[1];
+			String extraStr = null;
+			if (text.contains("#")) {
+				String[] temp = text.split("#");
+				if (temp.length > 1) {
+					extraStr = temp[1];
 				}
-			
-			}else if(text.contains("#")){
-				String[] temp=text.split("#");
-				if(temp.length>1){
-					extraStr=temp[1];
+
+			} else if (text.contains("#")) {
+				String[] temp = text.split("#");
+				if (temp.length > 1) {
+					extraStr = temp[1];
 				}
 			}
-			if(extraStr!=null){
+			if (extraStr != null) {
 				toSend.putExtraData(extraStr.getBytes());
 			}
-			
+
+			// int code =
 			int code = api.sendMessage(toSend);
+			 
 			adapter.addMsgToBottom(toSend);
 			scrollToBottom();
-			sendUserDataMessage("userdata message".getBytes(),"text#text");
-		}  
+			//sendUserDataMessage("userdata message".getBytes(), "text#text");
+		}
 	}
-	public void sendUserDataMessage(byte[] userData,String text){
-		if (userData!=null) {
+
+	public void sendUserDataMessage(byte[] userData, String text) {
+		if (userData != null) {
 			GotyeMessage toSend;
 			if (chatType == 0) {
-				toSend = GotyeMessage.createUserDataMessage(currentLoginUser, user,
-						userData,userData.length);
+				toSend = GotyeMessage.createUserDataMessage(currentLoginUser,
+						user, userData, userData.length);
 			} else if (chatType == 1) {
-				toSend = GotyeMessage.createUserDataMessage(currentLoginUser, room,
-						userData,userData.length);
+				toSend = GotyeMessage.createUserDataMessage(currentLoginUser,
+						room, userData, userData.length);
 			} else {
 				toSend = GotyeMessage.createUserDataMessage(currentLoginUser,
-						group, userData,userData.length);
+						group, userData, userData.length);
 			}
-			String extraStr=null;
-			if(text.contains("#")){
-				String[] temp=text.split("#");
-				if(temp.length>1){
-					extraStr=temp[1];
+			String extraStr = null;
+			if (text.contains("#")) {
+				String[] temp = text.split("#");
+				if (temp.length > 1) {
+					extraStr = temp[1];
 				}
-			
-			}else if(text.contains("#")){
-				String[] temp=text.split("#");
-				if(temp.length>1){
-					extraStr=temp[1];
+
+			} else if (text.contains("#")) {
+				String[] temp = text.split("#");
+				if (temp.length > 1) {
+					extraStr = temp[1];
 				}
 			}
-			if(extraStr!=null){
+			if (extraStr != null) {
 				toSend.putExtraData(extraStr.getBytes());
 			}
-			
-			int code = api.sendMessage(toSend);
+
+			// int code =
+			api.sendMessage(toSend);
 			adapter.addMsgToBottom(toSend);
 			scrollToBottom();
-		}  
+		}
 	}
-	
+
 	public void callBackSendImageMessage(GotyeMessage msg) {
 		adapter.addMsgToBottom(msg);
 		scrollToBottom();
 	}
 
 	public void info(View v) {
-		if (chatType==0) {
+		if (chatType == 0) {
 			Intent intent = getIntent();
 			intent.setClass(getApplication(), UserInfoPage.class);
 			intent.putExtra("user", user);
 			startActivity(intent);
-		} else if (chatType==1) {
+		} else if (chatType == 1) {
 			Intent info = new Intent(getApplication(), RoomInfoPage.class);
 			info.putExtra("room", room);
 			startActivity(info);
@@ -386,7 +414,7 @@ public class ChatPage extends BaseActivity implements OnClickListener {
 						list = api.getLocalMessages(group, true);
 					}
 					if (list != null) {
-						for(GotyeMessage msg:list){
+						for (GotyeMessage msg : list) {
 							api.downloadMessage(msg);
 						}
 						adapter.refreshData(list);
@@ -402,13 +430,9 @@ public class ChatPage extends BaseActivity implements OnClickListener {
 
 			@Override
 			public boolean onItemLongClick(AdapterView<?> arg0, View arg1,
-					int arg2, long arg3) {
-				// TODO Auto-generated method stub
-				final GotyeMessage message = adapter.getItem(arg2);
+					int position, long arg3) {
+				final GotyeMessage message = adapter.getItem(position - 1);
 				pullListView.setTag(message);
-				if (message.getSender().name.equals(currentLoginUser.getName())) {
-					return false;
-				}
 				pullListView.showContextMenu();
 				return true;
 			}
@@ -420,17 +444,35 @@ public class ChatPage extends BaseActivity implements OnClickListener {
 					public void onCreateContextMenu(ContextMenu conMenu,
 							View arg1, ContextMenuInfo arg2) {
 						final GotyeMessage message = (GotyeMessage) pullListView
-  								.getTag();
-						if (message.getSender().name
-								.equals(currentLoginUser.name)) {
+								.getTag();
+						if (message == null) {
 							return;
 						}
-						MenuItem m = conMenu.add(0, 0, 0, "举报");
+						MenuItem m = null;
+						if (chatType == 1
+								&& !message.getSender().name
+										.equals(currentLoginUser.name)) {
+							m = conMenu.add(0, 0, 0, "举报");
+						}
+						// if(message.getType()==GotyeMessageType.GotyeMessageTypeAudio){
+						// m= conMenu.add(0, 1, 0, "转为文字(仅限普通话)");
+						// }
+						if (m == null) {
+							return;
+						}
 						m.setOnMenuItemClickListener(new OnMenuItemClickListener() {
 
 							@Override
 							public boolean onMenuItemClick(MenuItem item) {
-								api.report(0, "举报的说明", message);
+								switch (item.getItemId()) {
+								case 0:
+									api.report(0, "举报的说明", message);
+									break;
+
+								case 1:
+									// api.decodeMessage(message);
+									break;
+								}
 								return true;
 							}
 						});
@@ -439,9 +481,10 @@ public class ChatPage extends BaseActivity implements OnClickListener {
 
 	}
 
-	private void scrollToBottom(){
-		pullListView.setSelection(adapter.getCount()-1);
+	public void scrollToBottom() {
+		pullListView.setSelection(adapter.getCount() - 1);
 	}
+
 	// private void showTalkView() {
 	// dismissTalkView();
 	// View view = LayoutInflater.from(this).inflate(
@@ -461,7 +504,7 @@ public class ChatPage extends BaseActivity implements OnClickListener {
 	// menuWindow.showAtLocation(findViewById(R.id.gotye_chat_content),
 	// Gravity.CENTER, 0, 0);
 	// }
-
+	//
 	// private void dismissTalkView() {
 	// if (menuWindow != null && menuWindow.isShowing()) {
 	// menuWindow.dismiss();
@@ -472,7 +515,6 @@ public class ChatPage extends BaseActivity implements OnClickListener {
 	// }
 	//
 	// private AnimationDrawable initRecordingView(View layout) {
-	//
 	// ImageView speakingBg = (ImageView) layout
 	// .findViewById(R.id.background_image);
 	// speakingBg.setImageDrawable(getResources().getDrawable(
@@ -489,15 +531,14 @@ public class ChatPage extends BaseActivity implements OnClickListener {
 
 	@Override
 	protected void onDestroy() {
-		// TODO Auto-generated method stub
 		api.removeListener(this);
 		if (chatType == 0) {
-			api.deactiveSession(user);
+			api.deactiveSession(o_user);
 		} else if (chatType == 1) {
-			api.deactiveSession(room);
-			api.leaveRoom(room);
+			api.deactiveSession(o_room);
+			api.leaveRoom(o_room);
 		} else {
-			api.deactiveSession(group);
+			api.deactiveSession(o_group);
 		}
 		super.onDestroy();
 	}
@@ -529,6 +570,9 @@ public class ChatPage extends BaseActivity implements OnClickListener {
 		// TODO Auto-generated method stub
 		switch (arg0.getId()) {
 		case R.id.back:
+			if(onRealTimeTalkFrom>=0){
+				return;
+			}
 			onBackPressed();
 			break;
 		case R.id.send_voice:
@@ -578,11 +622,15 @@ public class ChatPage extends BaseActivity implements OnClickListener {
 		case R.id.to_camera:
 			takePhoto();
 			break;
+		case R.id.voice_to_text:
+			// showTalkView();
+			break;
 		case R.id.real_time_voice_chat:
 			realTimeTalk();
 			break;
 		case R.id.stop_real_talk:
-			int i = api.stopTalk();
+			// int i =
+			api.stopTalk();
 			break;
 		default:
 			break;
@@ -612,9 +660,15 @@ public class ChatPage extends BaseActivity implements OnClickListener {
 	}
 
 	private void takePic() {
-		Intent intent = new Intent(Intent.ACTION_GET_CONTENT, null);
-		intent.setType("image/*");
+		Intent intent;
+		intent = new Intent(Intent.ACTION_PICK,
+				android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+		intent.setType("image/jpeg");
 		startActivityForResult(intent, REQUEST_PIC);
+
+		// Intent intent = new Intent(Intent.ACTION_GET_CONTENT, null);
+		// intent.setType("image/*");
+		// startActivityForResult(intent, REQUEST_PIC);
 	}
 
 	private void takePhoto() {
@@ -644,7 +698,7 @@ public class ChatPage extends BaseActivity implements OnClickListener {
 			if (data != null) {
 				Uri selectedImage = data.getData();
 				if (selectedImage != null) {
-					String path=FileUtil.uriToPath(this, selectedImage);
+					String path = URIUtil.uriToPath(this, selectedImage);
 					sendPicture(path);
 				}
 			}
@@ -660,7 +714,6 @@ public class ChatPage extends BaseActivity implements OnClickListener {
 		super.onActivityResult(requestCode, resultCode, data);
 	}
 
-	 
 	private void sendPicture(String path) {
 		SendImageMessageTask task;
 		if (chatType == 0) {
@@ -684,11 +737,10 @@ public class ChatPage extends BaseActivity implements OnClickListener {
 
 	@Override
 	public void onSendMessage(int code, GotyeMessage message) {
-		Log.d("OnSend", "code= " + code + "message = " + message);
 		// GotyeChatManager.getInstance().insertChatMessage(message);
 		adapter.updateMessage(message);
-		if(message.getType()==GotyeMessageType.GotyeMessageTypeAudio){
-			api.decodeMessage(message);
+		if (message.getType() == GotyeMessageType.GotyeMessageTypeAudio) {
+			// api.decodeMessage(message);
 		}
 		// message.senderUser =
 		// DBManager.getInstance().getUser(currentLoginName);
@@ -698,25 +750,28 @@ public class ChatPage extends BaseActivity implements OnClickListener {
 	@Override
 	public void onReceiveMessage(int code, GotyeMessage message) {
 		// GotyeChatManager.getInstance().insertChatMessage(message);
- 		if (chatType == 0) {
+		if (chatType == 0) {
 			if (isMyMessage(message)) {
-				// msg.senderUser = user;
 				adapter.addMsgToBottom(message);
 				pullListView.setSelection(adapter.getCount());
+				api.downloadMessage(message);
 			}
 		} else if (chatType == 1) {
 			if (message.getReceiver().Id == room.getRoomID()) {
-				// message.senderUser = user;
 				adapter.addMsgToBottom(message);
 				pullListView.setSelection(adapter.getCount());
+				api.downloadMessage(message);
+
 			}
 		} else if (chatType == 2) {
 			if (message.getReceiver().Id == group.getGroupID()) {
 				adapter.addMsgToBottom(message);
 				pullListView.setSelection(adapter.getCount());
+				api.downloadMessage(message);
 			}
 		}
-		//scrollToBottom();
+
+		// scrollToBottom();
 	}
 
 	private boolean isMyMessage(GotyeMessage message) {
@@ -731,7 +786,12 @@ public class ChatPage extends BaseActivity implements OnClickListener {
 
 	@Override
 	public void onDownloadMessage(int code, GotyeMessage message) {
-		adapter.downloadDone(message);
+		// adapter.downloadDone(message);
+		if (message.getType() == GotyeMessageType.GotyeMessageTypeAudio) {
+			if (message.getExtraData() == null) {
+				api.decodeMessage(message);
+			}
+		}
 	}
 
 	@Override
@@ -740,9 +800,9 @@ public class ChatPage extends BaseActivity implements OnClickListener {
 		if (code == 0) {
 			api.activeSession(room);
 			loadData();
-			GotyeRoom temp=api.requestRoomInfo(room.Id, true);
-			if(temp!=null&&!TextUtils.isEmpty(temp.getRoomName())){
-				title.setText("聊天室："+temp.getRoomName());
+			GotyeRoom temp = api.requestRoomInfo(room.Id, true);
+			if (temp != null && !TextUtils.isEmpty(temp.getRoomName())) {
+				title.setText("聊天室：" + temp.getRoomName());
 			}
 		} else {
 			ToastUtil.show(this, "房间不存在...");
@@ -751,10 +811,29 @@ public class ChatPage extends BaseActivity implements OnClickListener {
 	}
 
 	@Override
-	public void onGetHistoryMessageList(int code, List<GotyeMessage> list) {
-		if (chatType == 1) {
-			List<GotyeMessage> listmessages = api.getLocalMessages(room,
-					false);
+	public void onGetMessageList(int code, List<GotyeMessage> list) {
+		if (chatType == 0) {
+			List<GotyeMessage> listmessages = api.getLocalMessages(o_user, false);
+			if (listmessages != null) {
+				for (GotyeMessage temp : listmessages) {
+					api.downloadMessage(temp);
+				}
+				adapter.refreshData(listmessages);
+			} else {
+				ToastUtil.show(this, "没有历史记录");
+			}
+		}else if (chatType == 1){
+			List<GotyeMessage> listmessages = api.getLocalMessages(o_room, false);
+			if (listmessages != null) {
+				for (GotyeMessage temp : listmessages) {
+					api.downloadMessage(temp);
+				}
+				adapter.refreshData(listmessages);
+			} else {
+				ToastUtil.show(this, "没有历史记录");
+			}
+		}else if (chatType == 2){
+			List<GotyeMessage> listmessages = api.getLocalMessages(o_group, false);
 			if (listmessages != null) {
 				for (GotyeMessage temp : listmessages) {
 					api.downloadMessage(temp);
@@ -767,17 +846,19 @@ public class ChatPage extends BaseActivity implements OnClickListener {
 		adapter.notifyDataSetInvalidated();
 		pullListView.onRefreshComplete();
 	}
-
+    boolean realTalk,realPlay;
 	@Override
 	public void onStartTalk(int code, boolean isRealTime, int targetType,
 			GotyeChatTarget target) {
+		
 		if (isRealTime) {
+			this.realTalk=true;
 			if (code != 0) {
 				ToastUtil.show(this, "抢麦失败，先听听别人说什么。");
 				return;
 			}
-			if (GotyeVoicePlayClickListener.isPlaying) {
-				GotyeVoicePlayClickListener.currentPlayListener.stopPlayVoice();
+			if (GotyeVoicePlayClickPlayListener.isPlaying) {
+				GotyeVoicePlayClickPlayListener.currentPlayListener.stopPlayVoice(true);
 			}
 			onRealTimeTalkFrom = 0;
 			realTimeAnim.start();
@@ -787,8 +868,11 @@ public class ChatPage extends BaseActivity implements OnClickListener {
 		}
 	}
 
+	public List<GotyeMessage> toSend;
+
 	@Override
 	public void onStopTalk(int code, GotyeMessage message, boolean isVoiceReal) {
+		
 		if (isVoiceReal) {
 			onRealTimeTalkFrom = -1;
 			realTimeAnim.stop();
@@ -801,27 +885,44 @@ public class ChatPage extends BaseActivity implements OnClickListener {
 				ToastUtil.show(this, "时间太短...");
 				return;
 			}
-			api.sendMessage(message);
-			message.setStatus(GotyeMessage.STATUS_SENDING);
-			adapter.addMsgToBottom(message);
-			scrollToBottom();
 			api.decodeMessage(message);
+			if (toSend == null) {
+				toSend = new ArrayList<GotyeMessage>();
+			}
+			toSend.add(message);
+			// api.sendMessage(message);
+			// message.setStatus(GotyeMessage.STATUS_SENDING);
+			// adapter.addMsgToBottom(message);
+			// scrollToBottom();
 		}
 
+	}
+	
+	@Override
+	public void onPlayStart(int code, GotyeMessage message) {
+		// TODO Auto-generated method stub
+	}
+
+	@Override
+	public void onPlaying(int code, int position) {
+		// TODO Auto-generated method stub
 	}
 
 	@Override
 	public void onPlayStop(int code) {
-		onRealTimeTalkFrom = -1;
-		realTimeAnim.stop();
-		realTalkView.setVisibility(View.GONE);
-		setPlayingId(0);
+		setPlayingId(-1);
+		if(this.realPlay){
+			onRealTimeTalkFrom = -1;
+			realTimeAnim.stop();
+			realTalkView.setVisibility(View.GONE);	
+		}
 		adapter.notifyDataSetChanged();
 	}
 
 	@Override
 	public void onPlayStartReal(int code, long roomId, String who) {
 		if (code == 0 && roomId == this.room.getRoomID()) {
+			this.realPlay=true;
 			onRealTimeTalkFrom = 1;
 			realTalkView.setVisibility(View.VISIBLE);
 			realTalkName.setText(who + "正在说话..");
@@ -835,8 +936,11 @@ public class ChatPage extends BaseActivity implements OnClickListener {
 
 	@Override
 	public void onRequestUserInfo(int code, GotyeUser user) {
-		// TODO Auto-generated method stub
-		this.user = user;
+        if(chatType==0){
+        	if(user.name.equals(this.user.name)){
+    			this.user = user;
+    		}
+        }
 	}
 
 	@Override
@@ -848,7 +952,7 @@ public class ChatPage extends BaseActivity implements OnClickListener {
 	@Override
 	public void onUserDismissGroup(GotyeGroup group, GotyeUser user) {
 		// TODO Auto-generated method stub
-		if (this.group!=null&&group.getGroupID() == this.group.getGroupID()) {
+		if (this.group != null && group.getGroupID() == this.group.getGroupID()) {
 			Intent i = new Intent(this, MainActivity.class);
 			i.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
 			Toast.makeText(getBaseContext(), "群主解散了该群,会话结束", Toast.LENGTH_SHORT)
@@ -862,7 +966,7 @@ public class ChatPage extends BaseActivity implements OnClickListener {
 	public void onUserKickdFromGroup(GotyeGroup group, GotyeUser kicked,
 			GotyeUser actor) {
 		// TODO Auto-generated method stub
-		if (this.group!=null&&group.getGroupID() == this.group.getGroupID()) {
+		if (this.group != null && group.getGroupID() == this.group.getGroupID()) {
 			if (kicked.getName().equals(currentLoginUser.getName())) {
 				Intent i = new Intent(this, MainActivity.class);
 				i.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
@@ -874,6 +978,7 @@ public class ChatPage extends BaseActivity implements OnClickListener {
 
 		}
 	}
+
 	@Override
 	public void onReport(int code, GotyeMessage message) {
 		// TODO Auto-generated method stub
@@ -884,26 +989,79 @@ public class ChatPage extends BaseActivity implements OnClickListener {
 		}
 		super.onReport(code, message);
 	}
+
 	@Override
 	public void onRequestRoomInfo(int code, GotyeRoom room) {
 		// TODO Auto-generated method stub
-		if(this.room!=null&&this.room.getRoomID()==room.getRoomID()){
-			title.setText("聊天室："+room.getRoomName());	
+		if (this.room != null && this.room.getRoomID() == room.getRoomID()) {
+			title.setText("聊天室：" + room.getRoomName());
 		}
 		super.onRequestRoomInfo(code, room);
 	}
+
 	@Override
 	public void onRequestGroupInfo(int code, GotyeGroup group) {
-		// TODO Auto-generated method stub
-		if(this.group!=null&&this.group.getGroupID()==group.getGroupID()){
-			title.setText("聊天室："+group.getGroupName());	
+		if (this.group != null && this.group.getGroupID() == group.getGroupID()) {
+			title.setText("聊天室：" + group.getGroupName());
 		}
 	}
+
 	@Override
 	public void onDecodeMessage(int code, GotyeMessage message) {
-		// TODO Auto-generated method stub
-		Log.d("", "");
+		// Intent intent = new Intent(ChatPage.this, TextPageVoice.class);
+		// intent.putExtra("text_voice", message.getMedia().getPath_ex());
+		// startActivity(intent);
+		if (code == GotyeStatusCode.CODE_OK) {
+			VoiceToTextUtil util = new VoiceToTextUtil(this);
+			util.toPress(mSpeech, message);
+			
+		} else {
+			if (toSend != null) {
+				int p = toSend.indexOf(message);
+				if (p >= 0 && p < toSend.size()) {
+					api.sendMessage(message);
+					toSend.remove(p);
+				}
+			}
+		}
 		super.onDecodeMessage(code, message);
 	}
-	
+	@Override
+	public void onLogin(int code, GotyeUser currentLoginUser) {
+		// TODO Auto-generated method stub
+		setErrorTip(1);
+	}
+
+	@Override
+	public void onLogout(int code) {
+		// TODO Auto-generated method stub
+		setErrorTip(0);
+	}
+
+	@Override
+	public void onReconnecting(int code, GotyeUser currentLoginUser) {
+		// TODO Auto-generated method stub
+		setErrorTip(-1);
+	}
+	private void setErrorTip(int code) {
+		if (code == 1) {
+			 findViewById(R.id.error_tip).setVisibility(View.GONE);
+		} else {
+			 findViewById(R.id.error_tip).setVisibility(View.VISIBLE);
+			if (code == -1) {
+				 findViewById(R.id.loading)
+						.setVisibility(View.VISIBLE);
+				((TextView) findViewById(R.id.showText))
+						.setText("正在连接登陆...");
+				 findViewById(R.id.error_tip_icon).setVisibility(
+						View.GONE);
+			} else {
+				 findViewById(R.id.loading).setVisibility(View.GONE);
+				((TextView)  findViewById(R.id.showText))
+						.setText("当前未登陆或网络异常");
+				 findViewById(R.id.error_tip_icon).setVisibility(
+						View.VISIBLE);
+			}
+		}
+	}
 }

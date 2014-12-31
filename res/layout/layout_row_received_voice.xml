@@ -54,6 +54,16 @@
             android:layout_toRightOf="@id/tv_length"
             android:src="@drawable/voice_unread" />
 
+        <TextView
+            android:id="@+id/extra_data"
+            style="@style/chat_text_name_style"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignLeft="@+id/iv_voice"
+            android:layout_below="@+id/iv_voice"
+            android:text="额外数据"
+            android:visibility="visible" />
+
         <ProgressBar
             android:id="@+id/pb_sending"
             style="?android:attr/progressBarStyleSmall"

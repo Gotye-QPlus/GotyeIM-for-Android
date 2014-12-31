@@ -28,8 +28,8 @@ public class LoadLocalBigImgTask extends AsyncTask<Void, Void, Bitmap> {
 	private ProgressBar pb;
 	private PhotoView photoView;
 	private String path;
-	private int width;
-	private int height;
+	//private int width;
+	//private int height;
 	private Context context;
 
 	public LoadLocalBigImgTask(Context context, String path,
@@ -38,8 +38,8 @@ public class LoadLocalBigImgTask extends AsyncTask<Void, Void, Bitmap> {
 		this.path = path;
 		this.photoView = photoView;
 		this.pb = pb;
-		this.width = width;
-		this.height = height;
+		//this.width = width;
+		//this.height = height;
 	}
 
 	@Override
