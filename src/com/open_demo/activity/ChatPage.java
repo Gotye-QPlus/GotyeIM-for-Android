@@ -14,6 +14,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.view.KeyEvent;
@@ -234,34 +235,38 @@ public class ChatPage extends BaseActivity implements OnClickListener {
 						GotyeVoicePlayClickListener.currentPlayListener
 								.stopPlayVoice();
 					}
-
+                   int code = 0;
 					if (chatType == 0) {
-						api.startTalk(user, WhineMode.DEFAULT, false, 60 * 1000);
+						code=api.startTalk(user, WhineMode.DEFAULT, false, 60 * 1000);
 					} else if (chatType == 1) {
-						api.startTalk(room, WhineMode.DEFAULT, false, 60 * 1000);
+						code=api.startTalk(room, WhineMode.DEFAULT, false, 60 * 1000);
 					} else if (chatType == 2) {
-						api.startTalk(group, WhineMode.DEFAULT, false,
+						code=api.startTalk(group, WhineMode.DEFAULT, false,
 								60 * 1000);
 					}
+					int c=code;
 					pressToVoice.setText("松开 发送");
 					break;
 				case MotionEvent.ACTION_UP:
 					if (onRealTimeTalkFrom == 0) {
 						return false;
 					}
-					 
+					Log.d("chat_page",
+							"onTouch action=ACTION_UP" + event.getAction());
 					// if (onRealTimeTalkFrom > 0) {
 					// return false;
 					// }
 					api.stopTalk();
-					 
+					Log.d("chat_page",
+							"after stopTalk action=" + event.getAction());
 					pressToVoice.setText("按住 说话");
 					break;
 				case MotionEvent.ACTION_CANCEL:
 					if (onRealTimeTalkFrom == 0) {
 						return false;
 					}
-					 
+					Log.d("chat_page",
+							"onTouch action=ACTION_CANCEL" + event.getAction());
 					// if (onRealTimeTalkFrom > 0) {
 					// return false;
 					// }
@@ -269,7 +274,8 @@ public class ChatPage extends BaseActivity implements OnClickListener {
 					pressToVoice.setText("按住 说话");
 					break;
 				default:
-					 
+					Log.d("chat_page",
+							"onTouch action=default" + event.getAction());
 					break;
 				}
 				return false;
@@ -313,7 +319,7 @@ public class ChatPage extends BaseActivity implements OnClickListener {
 
 			// int code =
 			int code = api.sendMessage(toSend);
-			 
+			Log.d("", String.valueOf(code));
 			adapter.addMsgToBottom(toSend);
 			scrollToBottom();
 			//sendUserDataMessage("userdata message".getBytes(), "text#text");
@@ -737,6 +743,7 @@ public class ChatPage extends BaseActivity implements OnClickListener {
 
 	@Override
 	public void onSendMessage(int code, GotyeMessage message) {
+		Log.d("OnSend", "code= " + code + "message = " + message);
 		// GotyeChatManager.getInstance().insertChatMessage(message);
 		adapter.updateMessage(message);
 		if (message.getType() == GotyeMessageType.GotyeMessageTypeAudio) {
@@ -851,6 +858,7 @@ public class ChatPage extends BaseActivity implements OnClickListener {
 	public void onStartTalk(int code, boolean isRealTime, int targetType,
 			GotyeChatTarget target) {
 		
+		Log.e("player", "onStartTalk:" + isRealTime);
 		if (isRealTime) {
 			this.realTalk=true;
 			if (code != 0) {
@@ -872,6 +880,7 @@ public class ChatPage extends BaseActivity implements OnClickListener {
 
 	@Override
 	public void onStopTalk(int code, GotyeMessage message, boolean isVoiceReal) {
+		Log.e("player", "onStopTalk");
 		
 		if (isVoiceReal) {
 			onRealTimeTalkFrom = -1;
@@ -901,15 +910,18 @@ public class ChatPage extends BaseActivity implements OnClickListener {
 	@Override
 	public void onPlayStart(int code, GotyeMessage message) {
 		// TODO Auto-generated method stub
+		Log.e("player", "onPlayStart");
 	}
 
 	@Override
 	public void onPlaying(int code, int position) {
 		// TODO Auto-generated method stub
+		Log.e("player", "onPlaying");
 	}
 
 	@Override
 	public void onPlayStop(int code) {
+		Log.e("player", "onPlayStop");
 		setPlayingId(-1);
 		if(this.realPlay){
 			onRealTimeTalkFrom = -1;

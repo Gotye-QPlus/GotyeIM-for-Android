@@ -9,17 +9,20 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.IBinder;
 import android.text.TextUtils;
+import android.util.Log;
 
 import com.gotye.api.GotyeAPI;
 import com.gotye.api.GotyeMessage;
 import com.gotye.api.GotyeMessageType;
 import com.gotye.api.GotyeNotify;
+import com.gotye.api.GotyeStatusCode;
 import com.gotye.api.GotyeUser;
 import com.gotye.api.listener.NotifyListener;
 import com.open_demo.main.MainActivity;
 import com.open_demo.util.AppUtil;
 
 public class GotyeService extends Service implements NotifyListener {
+    public static final String ACTION_LOGIN="gotyeim.login";
 	private GotyeAPI api;
 	@Override
 	public IBinder onBind(Intent arg0) {
@@ -28,18 +31,31 @@ public class GotyeService extends Service implements NotifyListener {
 	@Override
 	public void onCreate() {
 		super.onCreate();
-		api = GotyeAPI.getInstance();
+		api=GotyeAPI.getInstance();
+		int code=api.init(getBaseContext(),MyApplication.APPKEY, getPackageName());
+		api.beginRcvOfflineMessge();
+		api.addListener(this);
+		Log.d("gotye_service", "onCreate--------");
+		//api = GotyeAPI.getInstance();
 	}
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId) {
-
-		String user[] = getUser(intent, this);
-		String hasUserName = user[0];
-		String hasPassWord = user[1];
-		if (!TextUtils.isEmpty(hasUserName)) {
-			api.init(this, MyApplication.APPKEY, getPackageName());
-			api.login(hasUserName, hasPassWord);
-			api.addListener(this);
+		Log.d("gotye_service", "onStartCommand--------");
+		Log.d("login", "flags="+flags);
+		if(intent!=null){
+			 if(ACTION_LOGIN.equals(intent.getAction())){
+				 String name=intent.getStringExtra("name");
+				 String pwd=intent.getStringExtra("pwd");
+				 int code=api.login(name, pwd);
+				 if(code==GotyeStatusCode.CODE_SYSTEM_BUSY){
+					 //已经登陆了
+				 }
+			}
+		}else{
+			String[] user=getUser(this);
+			if(!TextUtils.isEmpty(user[0])){
+				int code=api.login(user[0], user[1]);
+			}
 		}
 		flags = START_STICKY;
 		return super.onStartCommand(intent, flags, startId);
@@ -47,24 +63,15 @@ public class GotyeService extends Service implements NotifyListener {
 
 	@Override
 	public void onDestroy() {
-		Intent i=new Intent("gotye_action_keep_service");
-		sendBroadcast(i);
+		Log.d("gotye_service", "onDestroy");
 		GotyeAPI.getInstance().removeListener(this);
 		Intent localIntent = new Intent();
 		localIntent.setClass(this, GotyeService.class); // 銷毀時重新啟動Service
 		this.startService(localIntent);
 		super.onDestroy();
 	}
-
-	public static String[] getUser(Intent intent, Context context) {
-		if (intent != null) {
-			String[] user = new String[2];
-			user[0] = intent.getStringExtra("name");
-			user[1] = intent.getStringExtra("pwd");
-			if (!TextUtils.isEmpty(user[0])) {
-				return user;
-			}
-		}
+	
+	public static String[] getUser(Context context) {
 		SharedPreferences sp = context.getSharedPreferences(LoginPage.CONFIG,
 				Context.MODE_PRIVATE);
 		String name = sp.getString("username", null);
@@ -74,7 +81,6 @@ public class GotyeService extends Service implements NotifyListener {
 		user[1] = password;
 		return user;
 	}
-
 	@SuppressWarnings("deprecation")
 	private void notify(String msg) {
 		String currentPackageName = AppUtil.getTopAppPackage(getBaseContext());

@@ -153,6 +153,7 @@ public class SearchPage extends BaseActivity {
 				adapter = new SearchAdapter(curList, this);
 				listview.setAdapter(adapter);
 			} else {
+				adapter.clear();
 				adapter.addGroups(curList);
 			}
 		}

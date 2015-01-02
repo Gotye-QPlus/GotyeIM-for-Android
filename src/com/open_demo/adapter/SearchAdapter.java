@@ -35,7 +35,6 @@ public class SearchAdapter extends BaseAdapter {
 
 	@Override
 	public int getCount() {
-		// TODO Auto-generated method stub
 		if (searchType == 0) {
 			return mFriends.size();
 		} else {
