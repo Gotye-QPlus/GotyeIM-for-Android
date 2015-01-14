@@ -226,7 +226,7 @@ public class GroupRoomListPage extends BaseActivity {
 		GotyeChatTarget toRemove = null;
 		if (Type == 1 && roomsGroups != null) {
 			for (GotyeChatTarget target : roomsGroups) {
-				if (target.Id == group.getGroupID()) {
+				if (target.getId() == group.getGroupID()) {
 					toRemove = target;
 					break;
 				}
@@ -246,7 +246,7 @@ public class GroupRoomListPage extends BaseActivity {
 		if (Type == 1 && roomsGroups != null) {
 			if (kicked.getName().equals(currentLoginName)) {
 				for (GotyeChatTarget target : roomsGroups) {
-					if (target.Id == group.getGroupID()) {
+					if (target.getId() == group.getGroupID()) {
 						toRemove = target;
 						break;
 					}
@@ -291,10 +291,10 @@ public class GroupRoomListPage extends BaseActivity {
 			GotyeChatTarget target = (GotyeChatTarget) getItem(arg0);
 			if (Type == 0) {
 				// room
-				tx.setText(target.name);
+				tx.setText(target.getName());
 			} else {
 				// group
-				tx.setText(target.name);
+				tx.setText(target.getName());
 			}
 			setIcon(icon, target);
 			return layout;
@@ -304,7 +304,7 @@ public class GroupRoomListPage extends BaseActivity {
 			if (Type == 0) {
 				GotyeRoom room = (GotyeRoom) target;
 				if (room.getIcon() != null) {
-					Bitmap bmp = ImageCache.getInstance().get(target.Id + "");
+					Bitmap bmp = ImageCache.getInstance().get(target.getId() + "");
 					if (bmp != null) {
 						iconView.setImageBitmap(bmp);
 						return;
@@ -312,7 +312,7 @@ public class GroupRoomListPage extends BaseActivity {
 						bmp = BitmapUtil.getBitmap(room.getIcon().getPath());
 						if (bmp != null) {
 							iconView.setImageBitmap(bmp);
-							ImageCache.getInstance().put(room.Id + "", bmp);
+							ImageCache.getInstance().put(room.getId() + "", bmp);
 							return;
 						}
 					}
@@ -322,7 +322,7 @@ public class GroupRoomListPage extends BaseActivity {
 			} else {
 				GotyeGroup group = (GotyeGroup) target;
 				if (group.getIcon() != null) {
-					Bitmap bmp = ImageCache.getInstance().get(group.Id + "");
+					Bitmap bmp = ImageCache.getInstance().get(group.getId() + "");
 					if (bmp != null) {
 						iconView.setImageBitmap(bmp);
 						return;
@@ -330,7 +330,7 @@ public class GroupRoomListPage extends BaseActivity {
 						bmp = BitmapUtil.getBitmap(group.getIcon().getPath());
 						if (bmp != null) {
 							iconView.setImageBitmap(bmp);
-							ImageCache.getInstance().put(group.Id + "", bmp);
+							ImageCache.getInstance().put(group.getId() + "", bmp);
 							return;
 						}
 					}

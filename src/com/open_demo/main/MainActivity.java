@@ -27,6 +27,7 @@ import com.gotye.api.GotyeUser;
 import com.gotye.api.PathUtil;
 import com.open_demo.LoginPage;
 import com.open_demo.R;
+import com.open_demo.WelcomePage;
 import com.open_demo.base.BaseActivity;
 import com.open_demo.util.BeepManager;
 import com.open_demo.util.BitmapUtil;
@@ -134,6 +135,7 @@ public class MainActivity extends BaseActivity implements OnClickListener{
 
 	@SuppressLint("NewApi")
 	private void setTabSelection(int index) {
+		updateUnReadTip();
 		currentPosition = index;
 		clearSelection();
 		FragmentTransaction transaction = fragmentManager.beginTransaction();
@@ -220,20 +222,20 @@ public class MainActivity extends BaseActivity implements OnClickListener{
 	public void onLogout(int code) {
 		if (code == GotyeStatusCode.CODE_FORCELOGOUT) {
 			Toast.makeText(this, "您的账号在另外一台设备上登录了！", Toast.LENGTH_SHORT).show();
-			Intent intent = new Intent(getBaseContext(), LoginPage.class);
+			Intent intent = new Intent(getBaseContext(), WelcomePage.class);
 			intent.putExtra("logoutQuit", 100);
 			intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
 			startActivity(intent);
 			finish();
 		} else if (code == GotyeStatusCode.CODE_NETWORK_DISCONNECTED) {
 
-			Toast.makeText(this, "您的账号掉线了！", Toast.LENGTH_SHORT).show();
+		//	Toast.makeText(this, "您的账号掉线了！", Toast.LENGTH_SHORT).show();
 			/*
 			Intent intent = new Intent(getBaseContext(), LoginPage.class);
 			intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
 			startActivity(intent);*/
 		}else{
-			Intent i = new Intent(this, LoginPage.class);
+			Intent i = new Intent(this, WelcomePage.class);
 			i.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
 			i.putExtra("logoutQuit", 100);
 			Toast.makeText(this, "退出登陆！", Toast.LENGTH_SHORT).show();
@@ -322,7 +324,7 @@ public class MainActivity extends BaseActivity implements OnClickListener{
 		if (returnNotify) {
 			return;
 		}
-		api.deleteSession(user);
+		api.deleteSession(user, false);
 		messageFragment.refresh();
 		contactsFragment.refresh();
 	}

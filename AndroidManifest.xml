@@ -21,7 +21,8 @@
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.READ_CONTACTS" />
-
+<!-- baidu -->
+    <uses-permission android:name="android.permission.WRITE_SETTINGS" />
     <application
         android:name="com.open_demo.MyApplication"
         android:allowBackup="true"
@@ -29,8 +30,12 @@
         android:label="@string/app_name"
         android:persistent="true"
         android:theme="@style/AppTheme" >
+        <meta-data
+            android:name="com.baidu.lbsapi.API_KEY"
+            android:value="viFtt8GZqEAYdhn9cBSIbXDT" />
+
         <activity
-            android:name="com.open_demo.LoginPage"
+            android:name="com.open_demo.WelcomePage"
             android:label="@string/app_name" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

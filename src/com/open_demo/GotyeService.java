@@ -15,46 +15,64 @@ import com.gotye.api.GotyeAPI;
 import com.gotye.api.GotyeMessage;
 import com.gotye.api.GotyeMessageType;
 import com.gotye.api.GotyeNotify;
-import com.gotye.api.GotyeStatusCode;
 import com.gotye.api.GotyeUser;
 import com.gotye.api.listener.NotifyListener;
 import com.open_demo.main.MainActivity;
 import com.open_demo.util.AppUtil;
 
 public class GotyeService extends Service implements NotifyListener {
-    public static final String ACTION_LOGIN="gotyeim.login";
+	public static final String ACTION_INIT = "gotyeim.init";
+	public static final String ACTION_LOGIN = "gotyeim.login";
 	private GotyeAPI api;
+
 	@Override
 	public IBinder onBind(Intent arg0) {
 		return null;
 	}
+
 	@Override
 	public void onCreate() {
 		super.onCreate();
-		api=GotyeAPI.getInstance();
-		int code=api.init(getBaseContext(),MyApplication.APPKEY, getPackageName());
+		api = GotyeAPI.getInstance();
+		MyApplication.loadSelectedKey(this);
+		if(!TextUtils.isEmpty(MyApplication.IP)){
+			api.setNetConfig(MyApplication.IP, MyApplication.PORT);
+		}else{
+			//使用默认
+			api.setNetConfig("", -1);
+		}
+		int code = api.init(getBaseContext(), MyApplication.APPKEY,
+				getPackageName());
 		api.beginRcvOfflineMessge();
 		api.addListener(this);
 		Log.d("gotye_service", "onCreate--------");
-		//api = GotyeAPI.getInstance();
+		// api = GotyeAPI.getInstance();
 	}
+
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId) {
 		Log.d("gotye_service", "onStartCommand--------");
-		Log.d("login", "flags="+flags);
-		if(intent!=null){
-			 if(ACTION_LOGIN.equals(intent.getAction())){
-				 String name=intent.getStringExtra("name");
-				 String pwd=intent.getStringExtra("pwd");
-				 int code=api.login(name, pwd);
-				 if(code==GotyeStatusCode.CODE_SYSTEM_BUSY){
-					 //已经登陆了
-				 }
+		Log.d("login", "flags=" + flags);
+		if (intent != null) {
+			if (ACTION_LOGIN.equals(intent.getAction())) {
+				String name = intent.getStringExtra("name");
+				String pwd = intent.getStringExtra("pwd");
+				int code = api.login(name, pwd);
+				Log.d("login", code + "");
+			} else if (ACTION_INIT.equals(intent.getAction())) {
+				if(!TextUtils.isEmpty(MyApplication.IP)){
+					api.setNetConfig(MyApplication.IP, MyApplication.PORT);
+				}else{
+					//使用默认
+					api.setNetConfig("", -1);
+				}
+				int code = api.init(getBaseContext(), MyApplication.APPKEY,
+						getPackageName());
 			}
-		}else{
-			String[] user=getUser(this);
-			if(!TextUtils.isEmpty(user[0])){
-				int code=api.login(user[0], user[1]);
+		} else {
+			String[] user = getUser(this);
+			if (!TextUtils.isEmpty(user[0])) {
+				int code = api.login(user[0], user[1]);
 			}
 		}
 		flags = START_STICKY;
@@ -70,7 +88,7 @@ public class GotyeService extends Service implements NotifyListener {
 		this.startService(localIntent);
 		super.onDestroy();
 	}
-	
+
 	public static String[] getUser(Context context) {
 		SharedPreferences sp = context.getSharedPreferences(LoginPage.CONFIG,
 				Context.MODE_PRIVATE);
@@ -81,6 +99,7 @@ public class GotyeService extends Service implements NotifyListener {
 		user[1] = password;
 		return user;
 	}
+
 	@SuppressWarnings("deprecation")
 	private void notify(String msg) {
 		String currentPackageName = AppUtil.getTopAppPackage(getBaseContext());
@@ -107,15 +126,15 @@ public class GotyeService extends Service implements NotifyListener {
 		String msg = null;
 
 		if (message.getType() == GotyeMessageType.GotyeMessageTypeText) {
-			msg = message.getSender().name + "发来了一条消息";
+			msg = message.getSender().getName() + ":"+message.getText();
 		} else if (message.getType() == GotyeMessageType.GotyeMessageTypeImage) {
-			msg = message.getSender().name + "发来了一条图片消息";
+			msg = message.getSender().getName() + "发来了一条图片消息";
 		} else if (message.getType() == GotyeMessageType.GotyeMessageTypeAudio) {
-			msg = message.getSender().name + "发来了一条语音消息";
+			msg = message.getSender().getName() + "发来了一条语音消息";
 		} else if (message.getType() == GotyeMessageType.GotyeMessageTypeUserData) {
-			msg = message.getSender().name + "发来了一条自定义消息";
+			msg = message.getSender().getName() + "发来了一条自定义消息";
 		} else {
-			msg = message.getSender().name + "发来了一条群邀请信息";
+			msg = message.getSender().getName() + "发来了一条群邀请信息";
 		}
 		notify(msg);
 	}
@@ -128,11 +147,11 @@ public class GotyeService extends Service implements NotifyListener {
 
 	@Override
 	public void onReceiveNotify(int code, GotyeNotify notify) {
-		String msg = notify.getSender().name + "邀请您加入群[";
-		if (!TextUtils.isEmpty(notify.getFrom().name)) {
-			msg += notify.getFrom().name + "]";
+		String msg = notify.getSender().getName() + "邀请您加入群[";
+		if (!TextUtils.isEmpty(notify.getFrom().getName())) {
+			msg += notify.getFrom().getName() + "]";
 		} else {
-			msg += notify.getFrom().Id + "]";
+			msg += notify.getFrom().getId() + "]";
 		}
 		notify(msg);
 	}

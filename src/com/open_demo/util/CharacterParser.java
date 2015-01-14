@@ -1,6 +1,3 @@
-/*
- * @version	0.1
- */
 package com.open_demo.util;
 
 /**

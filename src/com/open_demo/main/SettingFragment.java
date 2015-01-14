@@ -25,7 +25,9 @@ import android.widget.TextView.OnEditorActionListener;
 import android.widget.Toast;
 
 import com.gotye.api.GotyeAPI;
+import com.gotye.api.GotyeStatusCode;
 import com.gotye.api.GotyeUser;
+import com.open_demo.LoginPage;
 import com.open_demo.R;
 import com.open_demo.base.BaseFragment;
 import com.open_demo.util.BitmapUtil;
@@ -54,7 +56,7 @@ public class SettingFragment extends BaseFragment{
 		api = GotyeAPI.getInstance();
 		api.addListener(this);
 		user = api.getCurrentLoginUser();
-		api.requestUserInfo(user.name, true);
+		api.requestUserInfo(user.getName(), true);
 		initView();
 		int state=api.getOnLineState();
 		if(state!=1){
@@ -69,7 +71,7 @@ public class SettingFragment extends BaseFragment{
 		nickName = (EditText) getView().findViewById(R.id.nick_name);
 		info=(EditText) getView().findViewById(R.id.info_name);
 		Button btn = (Button) getView().findViewById(R.id.logout_btn);
-		btn.setText("退出(" + user.name + ")");
+		btn.setText("退出");
 		nickName.setImeOptions(EditorInfo.IME_ACTION_SEARCH);
 		nickName.setOnEditorActionListener(new OnEditorActionListener() {
 			@Override
@@ -82,7 +84,7 @@ public class SettingFragment extends BaseFragment{
 						forModify.setNickname(text);
 						forModify.setInfo(info.getText().toString().trim());
 						forModify.setGender(user.getGender());
-						String headPath="";
+						String headPath=null;
 					int code=api.requestModifyUserInfo(forModify, headPath);
 					Log.d("", ""+code);
 					}
@@ -98,6 +100,11 @@ public class SettingFragment extends BaseFragment{
 				int code=api.logout();
 				int x=code;
 				Log.d("", "code"+code+""+x);
+				if(code==GotyeStatusCode.CODE_NOT_LOGIN){
+					Intent toLogin=new Intent(getActivity(), LoginPage.class);
+					startActivity(toLogin);
+					getActivity().finish();
+				}
 			}
 		});
 		getView().findViewById(R.id.icon_layout).setOnClickListener(
@@ -172,7 +179,7 @@ public class SettingFragment extends BaseFragment{
 	private void setUserInfo(GotyeUser user) {
 		if (user.getIcon() == null && !hasRequest) {
 			hasRequest = true;
-			api.requestUserInfo(user.name, true);
+			api.requestUserInfo(user.getName(), true);
 		} else {
 			Bitmap bm = BitmapUtil.getBitmap(user.getIcon().path);
 			if (bm != null) {
@@ -180,7 +187,11 @@ public class SettingFragment extends BaseFragment{
 			}
 		}
 		nickName.setText(user.getNickname());
-		info.setText(user.getInfo());
+		info.setText(user.getName());
+	}
+	@Override
+	public void onResume() {
+		super.onResume();
 	}
 
 	private void takePic() {
@@ -212,7 +223,7 @@ public class SettingFragment extends BaseFragment{
 
 	@Override
 	public void onRequestUserInfo(int code, GotyeUser user) {
-		if(user!=null&&user.name.equals(this.user.name)){
+		if(user!=null&&user.getName().equals(this.user.getName())){
 			setUserInfo(user);
 		}
 	}
@@ -265,13 +276,13 @@ public class SettingFragment extends BaseFragment{
 				getView().findViewById(R.id.loading)
 						.setVisibility(View.VISIBLE);
 				((TextView) getView().findViewById(R.id.showText))
-						.setText("正在连接登陆...");
+						.setText("连接中...");
 				getView().findViewById(R.id.error_tip_icon).setVisibility(
 						View.GONE);
 			}else{
 				getView().findViewById(R.id.loading).setVisibility(View.GONE);
 				((TextView) getView().findViewById(R.id.showText))
-						.setText("当前未登陆或网络异常");
+						.setText("未连接");
 				getView().findViewById(R.id.error_tip_icon).setVisibility(
 						View.VISIBLE);
 			}

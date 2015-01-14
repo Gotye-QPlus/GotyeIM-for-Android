@@ -78,7 +78,7 @@ public class MessageFragment extends BaseFragment {
 			public boolean onMenuItemClick(int position, SwipeMenu menu,
 					int index) {
 				GotyeChatTarget target = adapter.getItem(position);
-				api.deleteSession(target);
+				api.deleteSession(target, false);
 				updateList();
 				return false;
 			}
@@ -112,24 +112,24 @@ public class MessageFragment extends BaseFragment {
 					long arg3) {
 				GotyeChatTarget target = (GotyeChatTarget) adapter
 						.getItem(arg2);
-				if (target.name.equals(fixName)) {
+				if (target.getName().equals(fixName)) {
 					Intent i = new Intent(getActivity(), NotifyListPage.class);
 					startActivity(i);
 				} else {
 					GotyeAPI.getInstance().markMeeagesAsread(target);
-					if (target.type == GotyeChatTargetType.GotyeChatTargetTypeUser) {
+					if (target.getType() == GotyeChatTargetType.GotyeChatTargetTypeUser) {
 						Intent toChat = new Intent(getActivity(),
 								ChatPage.class);
 						toChat.putExtra("user", (GotyeUser) target);
 						startActivity(toChat);
 						// updateList();
-					} else if (target.type == GotyeChatTargetType.GotyeChatTargetTypeRoom) {
+					} else if (target.getType() == GotyeChatTargetType.GotyeChatTargetTypeRoom) {
 						Intent toChat = new Intent(getActivity(),
 								ChatPage.class);
 						toChat.putExtra("room", (GotyeRoom) target);
 						startActivity(toChat);
 
-					} else if (target.type == GotyeChatTargetType.GotyeChatTargetTypeGroup) {
+					} else if (target.getType() == GotyeChatTargetType.GotyeChatTargetTypeGroup) {
 						Intent toChat = new Intent(getActivity(),
 								ChatPage.class);
 						toChat.putExtra("group", (GotyeGroup) target);
@@ -145,8 +145,7 @@ public class MessageFragment extends BaseFragment {
 		List<GotyeChatTarget> sessions = api.getSessionList();
 		Log.d("offLine", "List--sessions" + sessions);
 
-		GotyeChatTarget target = new GotyeChatTarget();
-		target.name = fixName;
+		GotyeChatTarget target = new GotyeUser(fixName);
 
 		if (sessions == null) {
 			sessions = new ArrayList<GotyeChatTarget>();
@@ -201,11 +200,11 @@ public class MessageFragment extends BaseFragment {
 			getView().findViewById(R.id.error_tip).setVisibility(View.VISIBLE);
 			if(code==-1){
 				getView().findViewById(R.id.loading).setVisibility(View.VISIBLE);
-				((TextView)getView().findViewById(R.id.showText)).setText("正在连接登陆...");
+				((TextView)getView().findViewById(R.id.showText)).setText("连接中...");
 				getView().findViewById(R.id.error_tip_icon).setVisibility(View.GONE);
 			}else{
 				getView().findViewById(R.id.loading).setVisibility(View.GONE);
-				((TextView)getView().findViewById(R.id.showText)).setText("当前未登陆或网络异常");
+				((TextView)getView().findViewById(R.id.showText)).setText("未连接");
 				getView().findViewById(R.id.error_tip_icon).setVisibility(View.VISIBLE);
 			}
 		}

@@ -80,7 +80,7 @@ public class GroupMemberAdapter extends BaseAdapter {
 			layout.addView(icon, (int) (density * 60), (int) (60 * density));
 			setMemberIcon(icon, u);
 			if (deleteFlag) {
-				if (!u.name.equals(currentLoginName)) {
+				if (!u.getName().equals(currentLoginName)) {
 					ImageView deleteIcon = new ImageView(context);
 					RelativeLayout.LayoutParams param = new RelativeLayout.LayoutParams(
 							-2, -2);

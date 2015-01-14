@@ -84,12 +84,12 @@ public class SearchAdapter extends BaseAdapter {
 		}
 		if(searchType==0){
 			GotyeUser user = (GotyeUser) getItem(position);
-			viewHolder.name.setText(user.name);
+			viewHolder.name.setText(user.getName());
 			viewHolder.firstChar.setVisibility(View.GONE);
 			setIcon(viewHolder, user);
 		}else{
 			GotyeGroup group = (GotyeGroup) getItem(position);
-			viewHolder.name.setText(group.name);
+			viewHolder.name.setText(group.getGroupName());
 			viewHolder.firstChar.setVisibility(View.GONE);
 			setIcon(viewHolder,group);
 		}

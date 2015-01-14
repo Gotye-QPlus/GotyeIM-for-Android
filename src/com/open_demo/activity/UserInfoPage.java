@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.Window;
@@ -30,6 +31,7 @@ public class UserInfoPage extends BaseActivity implements OnClickListener {
 	private int from;
 	private GotyeRoom room;
 	TextView userInfoView;
+
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		// TODO Auto-generated method stub
@@ -40,10 +42,10 @@ public class UserInfoPage extends BaseActivity implements OnClickListener {
 		api.addListener(this);
 		from = getIntent().getIntExtra("from", -1);
 		room = (GotyeRoom) getIntent().getSerializableExtra("room");
-        GotyeUser tempUser=api.requestUserInfo(user.getName(), true);
-         if(tempUser!=null){
-        	 user=tempUser; 
-         }
+		GotyeUser tempUser = api.requestUserInfo(user.getName(), true);
+		if (tempUser != null) {
+			user = tempUser;
+		}
 		initView();
 		setValue();
 	}
@@ -51,7 +53,7 @@ public class UserInfoPage extends BaseActivity implements OnClickListener {
 	private void initView() {
 
 		findViewById(R.id.back).setOnClickListener(this);
-		userInfoView=(TextView) findViewById(R.id.user_info);
+		userInfoView = (TextView) findViewById(R.id.user_info);
 		if (user.isFriend()) {
 			findViewById(R.id.add_friend).setEnabled(false);
 			findViewById(R.id.del_frieng).setEnabled(true);
@@ -77,15 +79,23 @@ public class UserInfoPage extends BaseActivity implements OnClickListener {
 	private void setValue() {
 		((TextView) findViewById(R.id.name)).setText(user.getName());
 		((TextView) findViewById(R.id.id)).setText("昵称:" + user.getNickname());
-		userInfoView.setText("用户信息"+user.getInfo());
+		userInfoView.setText("用户信息" + user.getInfo());
 		userIconView = (ImageView) findViewById(R.id.user_icon);
-		if (user.getIcon() != null) {
-			Bitmap bm = BitmapUtil.getBitmap(user.getIcon().path);
-			if (bm == null) {
-				userIconView.setImageBitmap(bm);
-				ImageCache.getInstance().put(user.getName(), bm);
+		Bitmap bmp = ImageCache.getInstance().get(user.getName());
+		if (bmp != null) {
+			userIconView.setImageBitmap(bmp);
+		} else {
+			if (user.getIcon() != null) {
+				Bitmap bm = BitmapUtil.getBitmap(user.getIcon().path);
+				if (bm != null) {
+					userIconView.setImageBitmap(bm);
+					ImageCache.getInstance().put(user.getName(), bm);
+				} else {
+					api.downloadMedia(user.getIcon().url);
+				}
 			}
 		}
+
 	}
 
 	@Override
@@ -102,10 +112,10 @@ public class UserInfoPage extends BaseActivity implements OnClickListener {
 			break;
 		case R.id.add_friend:
 			GotyeUser userLogin = GotyeAPI.getInstance().getCurrentLoginUser();
-			if(user.name.equals(userLogin.getName())){
+			if (user.getName().equals(userLogin.getName())) {
 				Toast.makeText(this, "不能添加自己", Toast.LENGTH_SHORT).show();
 				return;
-			}else{
+			} else {
 				ProgressDialogUtil.showProgress(this, "正在加为好友...");
 				api.requestAddFriend(user);
 			}
@@ -178,8 +188,8 @@ public class UserInfoPage extends BaseActivity implements OnClickListener {
 
 	@Override
 	public void onRemoveFriend(int code, GotyeUser user) {
-		
-		  if(from == 100){
+
+		if (from == 100) {
 			ProgressDialogUtil.dismiss();
 			Intent i = new Intent(this, RoomInfoPage.class);
 			i.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
@@ -187,17 +197,17 @@ public class UserInfoPage extends BaseActivity implements OnClickListener {
 			startActivity(i);
 			finish();
 			ToastUtil.show(this, "成功删除好友：" + user.getName());
-		}else if(from==1){
+		} else if (from == 1) {
 			finish();
-		}else{
-				ProgressDialogUtil.dismiss();
-				Intent i = new Intent(this, MainActivity.class);
-				i.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-				i.putExtra("tab", 1);
-				startActivity(i);
-				ToastUtil.show(this, "成功删除好友：" + user.getName());
+		} else {
+			ProgressDialogUtil.dismiss();
+			Intent i = new Intent(this, MainActivity.class);
+			i.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+			i.putExtra("tab", 1);
+			startActivity(i);
+			ToastUtil.show(this, "成功删除好友：" + user.getName());
 		}
-		  
+
 	}
 
 	@Override
@@ -211,6 +221,20 @@ public class UserInfoPage extends BaseActivity implements OnClickListener {
 		} else {
 			ToastUtil.show(getBaseContext(), "抱歉，没能把" + user.getName()
 					+ "移除黑名单");
+		}
+	}
+
+	@Override
+	public void onDownloadMedia(int code, String path, String url) {
+		if (!TextUtils.isEmpty(url)) {
+			if (user.getIcon() != null && url.equals(user.getIcon().url)) {
+				Bitmap bm = BitmapUtil.getBitmap(path);
+				if (bm != null) {
+					userIconView.setImageBitmap(bm);
+					ImageCache.getInstance().put(user.getName(), bm);
+				}
+
+			}
 		}
 	}
 }

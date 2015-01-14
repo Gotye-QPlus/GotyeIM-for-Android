@@ -122,7 +122,7 @@ public class NotifyListPage extends BaseActivity {
 
 					} else {
 						if (index == 0) {
-							api.joinGroup(new GotyeGroup(notify.getFrom().Id));
+							api.joinGroup(new GotyeGroup(notify.getFrom().getId()));
 							notify.setRead(true);
 							api.markNotifyIsread(notify);
 							ProgressDialogUtil.showProgress(
@@ -211,7 +211,7 @@ public class NotifyListPage extends BaseActivity {
 		if (code == GotyeStatusCode.CODE_OK) {
 			if (notifies != null) {
 				for (GotyeNotify notify : notifies) {
-					if (notify.getFrom().Id == group.getGroupID()) {
+					if (notify.getFrom().getId() == group.getGroupID()) {
 						notify.setRead(true);
 						ToastUtil.show(this, "成功加入该群");
 						if (adapter != null) {

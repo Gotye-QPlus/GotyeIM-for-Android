@@ -153,11 +153,11 @@ public class ContactsFragment extends BaseFragment implements OnClickListener {
 			Collections.sort(proxyFrinds, pinyinComparator);
 		}
 		GotyeUserProxy room = new GotyeUserProxy(new GotyeUser());
-		room.gotyeUser.Id = -2;
+		room.gotyeUser.setId(-2);
 		room.firstChar = "↑";
 		proxyFrinds.add(0, room);
 		GotyeUserProxy group = new GotyeUserProxy(new GotyeUser());
-		group.gotyeUser.Id = -1;
+		group.gotyeUser.setId(-1);
 		group.firstChar = "↑";
 		proxyFrinds.add(1, group);
 		if (adapter != null) {
@@ -170,7 +170,7 @@ public class ContactsFragment extends BaseFragment implements OnClickListener {
 		proxyFrinds.clear();
 		if (friends != null) {
 			for (GotyeUser user : friends) {
-				if(user.Id<0){
+				if (user.getId() < 0) {
 					continue;
 				}
 				String pinyin = characterParser.getSelling(user.getName());
@@ -189,15 +189,14 @@ public class ContactsFragment extends BaseFragment implements OnClickListener {
 				proxyFrinds.add(userProxy);
 			}
 			Collections.sort(proxyFrinds, pinyinComparator);
-			
-			
+
 		}
 		GotyeUserProxy room = new GotyeUserProxy(new GotyeUser());
-		room.gotyeUser.Id = -2;
+		room.gotyeUser.setId(-2);
 		room.firstChar = "↑";
 		proxyFrinds.add(0, room);
 		GotyeUserProxy group = new GotyeUserProxy(new GotyeUser());
-		group.gotyeUser.Id = -1;
+		group.gotyeUser.setId(-1);
 		group.firstChar = "↑";
 		proxyFrinds.add(1, group);
 	}
@@ -213,19 +212,20 @@ public class ContactsFragment extends BaseFragment implements OnClickListener {
 				GotyeUserProxy userProxy = ((GotyeUserProxy) adapter
 						.getItem(arg2));
 				if (selectedFriendTab) {
-					if (userProxy.gotyeUser.Id == -2) {
+					if (userProxy.gotyeUser.getId() == -2) {
 						Intent room = new Intent(getActivity(),
 								GroupRoomListPage.class);
 						room.putExtra("type", 0);
 						startActivity(room);
 						return;
-					}else if(userProxy.gotyeUser.Id == -1){
-						 Intent group = new Intent(getActivity(), GroupRoomListPage.class);
-						 group.putExtra("type", 1);
-						 startActivity(group);
-						 return;
+					} else if (userProxy.gotyeUser.getId() == -1) {
+						Intent group = new Intent(getActivity(),
+								GroupRoomListPage.class);
+						group.putExtra("type", 1);
+						startActivity(group);
+						return;
 					}
-					if (userProxy.gotyeUser.Id == -1) {
+					if (userProxy.gotyeUser.getId() == -1) {
 						Intent group = new Intent(getActivity(),
 								GroupRoomListPage.class);
 						group.putExtra("type", 1);
@@ -237,17 +237,18 @@ public class ContactsFragment extends BaseFragment implements OnClickListener {
 					i.putExtra("from", 200);
 					startActivity(i);
 				} else {
-					if (userProxy.gotyeUser.Id == -2) {
+					if (userProxy.gotyeUser.getId() == -2) {
 						Intent room = new Intent(getActivity(),
 								GroupRoomListPage.class);
 						room.putExtra("type", 0);
 						startActivity(room);
 						return;
-					}else if(userProxy.gotyeUser.Id == -1){
-						 Intent group = new Intent(getActivity(), GroupRoomListPage.class);
-						 group.putExtra("type", 1);
-						 startActivity(group);
-						 return;
+					} else if (userProxy.gotyeUser.getId() == -1) {
+						Intent group = new Intent(getActivity(),
+								GroupRoomListPage.class);
+						group.putExtra("type", 1);
+						startActivity(group);
+						return;
 					}
 					Intent i = new Intent(getActivity(), UserInfoPage.class);
 					i.putExtra("user", userProxy.gotyeUser);
@@ -262,7 +263,7 @@ public class ContactsFragment extends BaseFragment implements OnClickListener {
 					int arg2, long arg3) {
 				GotyeUserProxy userProxy = ((GotyeUserProxy) adapter
 						.getItem(arg2));
-				if (userProxy.gotyeUser.Id < 0) {
+				if (userProxy.gotyeUser.getId() < 0) {
 					return true;
 				}
 				Intent i = new Intent(getActivity(), UserInfoPage.class);
@@ -393,7 +394,7 @@ public class ContactsFragment extends BaseFragment implements OnClickListener {
 
 	@Override
 	public void onDownloadMedia(int code, String path, String url) {
-		if(getActivity().isTaskRoot()){
+		if (getActivity().isTaskRoot()) {
 			adapter.notifyDataSetChanged();
 		}
 	}
@@ -425,13 +426,13 @@ public class ContactsFragment extends BaseFragment implements OnClickListener {
 				getView().findViewById(R.id.loading)
 						.setVisibility(View.VISIBLE);
 				((TextView) getView().findViewById(R.id.showText))
-						.setText("正在连接登陆...");
+						.setText("连接中...");
 				getView().findViewById(R.id.error_tip_icon).setVisibility(
 						View.GONE);
 			} else {
 				getView().findViewById(R.id.loading).setVisibility(View.GONE);
 				((TextView) getView().findViewById(R.id.showText))
-						.setText("当前未登陆或网络异常");
+						.setText("未连接");
 				getView().findViewById(R.id.error_tip_icon).setVisibility(
 						View.VISIBLE);
 			}

@@ -1,16 +1,3 @@
-/**
- * Copyright (C) 2013-2014 EaseMob Technologies. All rights reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *     http://www.apache.org/licenses/LICENSE-2.0
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package com.open_demo.util;
 
 import java.util.HashMap;
@@ -52,14 +39,14 @@ public class ImageCache {
 	
 	
 	public void setIcom(ImageView iconView,GotyeUser user){
-		 Bitmap bmp=ImageCache.getInstance().get(user.name);
+		 Bitmap bmp=ImageCache.getInstance().get(user.getName());
    	  if(bmp!=null){
    		  iconView.setImageBitmap(bmp);
    	  }else{
    		  bmp=BitmapUtil.getBitmap(user.getIcon().getPath());
    		  if(bmp!=null){
    			iconView.setImageBitmap(bmp);
-   			put(user.name, bmp);
+   			put(user.getName(), bmp);
    		  }else{
    			  
    			  iconView.setImageResource(R.drawable.head_icon_user);
@@ -76,14 +63,14 @@ public class ImageCache {
    	
 	}
 	public void setIcom(ImageView iconView,GotyeGroup group){
-		Bitmap bmp=ImageCache.getInstance().get(group.Id+"");
+		Bitmap bmp=ImageCache.getInstance().get(group.getId()+"");
 		if(bmp!=null){
 			iconView.setImageBitmap(bmp);
 		}else{
 			bmp=BitmapUtil.getBitmap(group.getIcon().getPath());
 			if(bmp!=null){
 				iconView.setImageBitmap(bmp);
-				put(group.Id+"", bmp);
+				put(group.getId()+"", bmp);
 			}else{
 				
 				iconView.setImageResource(R.drawable.head_icon_user);

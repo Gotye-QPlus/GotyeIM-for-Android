@@ -72,7 +72,7 @@ public class MessageListAdapter extends BaseAdapter {
 	public int getItemViewType(int position) {
 		// TODO Auto-generated method stub
 		GotyeChatTarget t = sessions.get(position);
-		if (t.name.equals(MessageFragment.fixName)) {
+		if (t.getName().equals(MessageFragment.fixName)) {
 			return 0;
 		} else {
 			return 1;
@@ -102,7 +102,7 @@ public class MessageListAdapter extends BaseAdapter {
 		final GotyeChatTarget session =  getItem(arg0);
 		Log.d("offLine", "session" + session);
 		if (getItemViewType(arg0)==0) {
-			viewHolder.title.setText(session.name);
+			viewHolder.title.setText(session.getName());
 			viewHolder.content.setVisibility(View.GONE);
 			viewHolder.icon.setImageResource(R.drawable.contact_group);
 			viewHolder.time.setVisibility(View.GONE);
@@ -136,42 +136,42 @@ public class MessageListAdapter extends BaseAdapter {
 				content = "邀请消息";
 			}
 
-			if (session.type == GotyeChatTargetType.GotyeChatTargetTypeUser) {
-				setIcon(viewHolder.icon, session.name);
-				GotyeUser user = api.requestUserInfo(session.name, false);
+			if (session.getType() == GotyeChatTargetType.GotyeChatTargetTypeUser) {
+				setIcon(viewHolder.icon, session.getName());
+				GotyeUser user = api.requestUserInfo(session.getName(), false);
 				if (user != null) {
 					if (TextUtils.isEmpty(user.getNickname())) {
-						title = "好友：" + user.name;
+						title = "好友：" + user.getName();
 					} else {
 						title = "好友：" + user.getNickname();
 					}
 				} else {
-					title = "好友：" + session.name;
+					title = "好友：" + session.getName();
 				}
-			} else if (session.type == GotyeChatTargetType.GotyeChatTargetTypeRoom) {
-				setIcon(viewHolder.icon, String.valueOf(session.Id));
-				GotyeRoom room = api.requestRoomInfo(session.Id, false);
+			} else if (session.getType() == GotyeChatTargetType.GotyeChatTargetTypeRoom) {
+				setIcon(viewHolder.icon, String.valueOf(session.getId()));
+				GotyeRoom room = api.requestRoomInfo(session.getId(), false);
 				if (room != null) {
 					if (TextUtils.isEmpty(room.getRoomName())) {
-						title = "聊天室：" + room.Id;
+						title = "聊天室：" + room.getId();
 					} else {
 						title = "聊天室：" + room.getRoomName();
 					}
 				} else {
-					title = "聊天室：" + session.Id;
+					title = "聊天室：" + session.getId();
 				}
 
-			} else if (session.type == GotyeChatTargetType.GotyeChatTargetTypeGroup) {
-				GotyeGroup group = api.requestGroupInfo(session.Id, false);
-				setIcon(viewHolder.icon, String.valueOf(session.Id));
+			} else if (session.getType() == GotyeChatTargetType.GotyeChatTargetTypeGroup) {
+				GotyeGroup group = api.requestGroupInfo(session.getId(), false);
+				setIcon(viewHolder.icon, String.valueOf(session.getId()));
 				if (group != null) {
 					if (TextUtils.isEmpty(group.getGroupName())) {
-						title = "群：" + group.Id;
+						title = "群：" + group.getId();
 					} else {
 						title = "群：" + group.getGroupName();
 					}
 				} else {
-					title = "群：" + session.Id;
+					title = "群：" + session.getId();
 				}
 
 			}

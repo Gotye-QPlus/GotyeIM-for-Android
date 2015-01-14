@@ -4,17 +4,14 @@ import java.util.ArrayList;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
-import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.open_demo.R;
-import com.open_demo.activity.GroupRoomListPage;
 import com.open_demo.bean.GotyeUserProxy;
 import com.open_demo.util.ImageCache;
 
@@ -74,9 +71,9 @@ public class ContactsAdapter extends BaseAdapter {
 		}
 		GotyeUserProxy user = (GotyeUserProxy) getItem(position);
 		viewHolder.firstChar.setVisibility(View.GONE);
-		if (user.gotyeUser.Id == -2) {
+		if (user.gotyeUser.getId() == -2) {
 			viewHolder.name.setText("聊天室");
-		} else if (user.gotyeUser.Id == -1) {
+		} else if (user.gotyeUser.getId() == -1) {
 			viewHolder.name.setText("群");
 		} else {
 			String name = user.gotyeUser.getName();
@@ -97,9 +94,9 @@ public class ContactsAdapter extends BaseAdapter {
 	private void setIcon(ViewHolder viewHolder, GotyeUserProxy user) {
 		if (user.gotyeUser.getIcon() != null) {
 
-			if (user.gotyeUser.Id == -2) {
+			if (user.gotyeUser.getId() == -2) {
 				viewHolder.icon.setImageResource(R.drawable.contact_room);
-			} else if (user.gotyeUser.Id == -1) {
+			} else if (user.gotyeUser.getId() == -1) {
 				viewHolder.icon.setImageResource(R.drawable.contact_group);
 			} else {
 				ImageCache.getInstance().setIcom(viewHolder.icon,

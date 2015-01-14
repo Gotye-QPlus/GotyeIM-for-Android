@@ -68,7 +68,7 @@ public class GroupInfoPage extends BaseActivity {
 		// TODO Auto-generated method stub
 		super.onCreate(savedInstanceState);
 		requestWindowFeature(Window.FEATURE_NO_TITLE);
-		currentLoginName = api.getCurrentLoginUser().name;
+		currentLoginName = api.getCurrentLoginUser().getName();
 		group = (GotyeGroup) getIntent().getSerializableExtra("group");
 		group = api.requestGroupInfo(group.getGroupID(), true);
 
@@ -167,13 +167,13 @@ public class GroupInfoPage extends BaseActivity {
 
 		CheckBox set_to_top = ((CheckBox) findViewById(R.id.set_to_top));
 		boolean setTop = PreferenceUitl.getBooleanValue(this, "set_top_"
-				+ group.Id);
+				+ group.getGroupID());
 		set_to_top.setChecked(setTop);
 		set_to_top.setOnCheckedChangeListener(new OnCheckedChangeListener() {
 			@Override
 			public void onCheckedChanged(CompoundButton arg0, boolean arg1) {
 				PreferenceUitl.setBooleanValue(GroupInfoPage.this, "set_top_"
-						+ group.Id, arg1);
+						+ group.getGroupID(), arg1);
 				api.markSessionTop(group, arg1);
 			}
 		});
@@ -255,7 +255,7 @@ public class GroupInfoPage extends BaseActivity {
 					return;
 				}
 				if (adapter.isDeleteFlag()) {
-					if (user.name.equals(currentLoginName)) {
+					if (user.getName().equals(currentLoginName)) {
 						return;
 					}
 					dialogToDeleteMember(user);

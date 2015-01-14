@@ -27,7 +27,6 @@ import com.open_demo.base.BaseActivity;
 public class SearchPage extends BaseActivity {
 	private ListView listview;
 	private EditText input;
-
 	private int pageIndex = 0;
 	private String keyword;
 	private SearchAdapter adapter;
@@ -61,7 +60,6 @@ public class SearchPage extends BaseActivity {
 
 			@Override
 			public boolean onEditorAction(TextView arg0, int arg1, KeyEvent arg2) {
-				// TODO Auto-generated method stub
 				if (arg1 == EditorInfo.IME_ACTION_SEARCH||arg1==0) {
 					if (adapter != null) {
 						adapter.clear();
@@ -147,7 +145,6 @@ public class SearchPage extends BaseActivity {
 	@Override
 	public void onSearchGroupList(int code, List<GotyeGroup> mList,
 			List<GotyeGroup> curList, int pageIndex) {
-		// TODO Auto-generated method stub
 		if (curList != null) {
 			if (adapter == null) {
 				adapter = new SearchAdapter(curList, this);

@@ -74,7 +74,7 @@ public class SelectUserAdapter extends BaseAdapter {
 		}
 		final GotyeUserProxy contacts = (GotyeUserProxy) getItem(position);
 
-		String name = contacts.gotyeUser.name;
+		String name = contacts.gotyeUser.getName();
 		viewHolder.name.setText(name);
 
 		int section = getSectionForPosition(position);
@@ -96,9 +96,9 @@ public class SelectUserAdapter extends BaseAdapter {
 					public void onCheckedChanged(CompoundButton arg0,
 							boolean arg1) {
 						if (arg1) {
-							selectedMap.put(contacts.gotyeUser.name, true);
+							selectedMap.put(contacts.gotyeUser.getName(), true);
 						} else {
-							selectedMap.remove(contacts.gotyeUser.name);
+							selectedMap.remove(contacts.gotyeUser.getName());
 						}
 						mContext.getCount(selectedMap);
 					}

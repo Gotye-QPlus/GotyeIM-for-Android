@@ -37,7 +37,7 @@ public class RoomInfoPage extends BaseActivity {
 		setContentView(R.layout.layout_room_info);
 		api.addListener(this);
 		memberView = (GridView) findViewById(R.id.members);
-		((TextView) findViewById(R.id.room_name)).setText(room.name);
+		((TextView) findViewById(R.id.room_name)).setText(room.getName());
 
 		if (api.isInRoom(room)) {
 			api.requestRoomMemberlist(room, 0);
@@ -61,19 +61,19 @@ public class RoomInfoPage extends BaseActivity {
 		});
 		CheckBox set_to_top = ((CheckBox) findViewById(R.id.set_to_top));
 		boolean setTop = PreferenceUitl.getBooleanValue(RoomInfoPage.this,
-				"set_top_" + room.Id);
+				"set_top_" + room.getId());
 		set_to_top.setChecked(setTop);
 		set_to_top.setOnCheckedChangeListener(new OnCheckedChangeListener() {
 			@Override
 			public void onCheckedChanged(CompoundButton arg0, boolean arg1) {
 				PreferenceUitl.setBooleanValue(RoomInfoPage.this, "set_top_"
-						+ room.Id, arg1);
+						+ room.getId(), arg1);
 				api.markSessionTop(room, arg1);
 			}
 		});
 		showMemberName = ((CheckBox) findViewById(R.id.show_member_name));
 		boolean showName = PreferenceUitl.getBooleanValue(RoomInfoPage.this,
-				"r_show_name_" + room.Id);
+				"r_show_name_" + room.getId());
 		if (adapter != null) {
 			adapter.showName = showName;
 			adapter.notifyDataSetChanged();
@@ -85,7 +85,7 @@ public class RoomInfoPage extends BaseActivity {
 					public void onCheckedChanged(CompoundButton arg0,
 							boolean arg1) {
 						PreferenceUitl.setBooleanValue(RoomInfoPage.this,
-								"r_show_name_" + room.Id, arg1);
+								"r_show_name_" + room.getId(), arg1);
 						if (adapter != null) {
 							adapter.showName = arg1;
 							adapter.notifyDataSetChanged();
@@ -94,14 +94,14 @@ public class RoomInfoPage extends BaseActivity {
 				});
 		CheckBox disturb = ((CheckBox) findViewById(R.id.no_disturb));
 		boolean dis = PreferenceUitl.getBooleanValue(RoomInfoPage.this,
-				"r_disturb_" + room.Id);
+				"r_disturb_" + room.getId());
 		disturb.setChecked(dis);
 		disturb.setOnCheckedChangeListener(new OnCheckedChangeListener() {
 
 			@Override
 			public void onCheckedChanged(CompoundButton arg0, boolean arg1) {
 				PreferenceUitl.setBooleanValue(RoomInfoPage.this, "r_disturb_"
-						+ room.Id, arg1);
+						+ room.getId(), arg1);
 			}
 		});
 	}
@@ -138,7 +138,7 @@ public class RoomInfoPage extends BaseActivity {
 		if (totalMembers != null) {
 			adapter = new MemberAdapter(this, totalMembers);
 			adapter.showName = PreferenceUitl.getBooleanValue(
-					RoomInfoPage.this, "r_show_name_" + room.Id);
+					RoomInfoPage.this, "r_show_name_" + room.getId());
 			memberView.setAdapter(adapter);
 		}
 	}

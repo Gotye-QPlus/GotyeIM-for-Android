@@ -9,12 +9,18 @@ public class GotyeUserProxy {
 	public GotyeUserProxy(GotyeUser gotyeUser) {
 		this.gotyeUser = gotyeUser;
 	}
+
 	@Override
 	public boolean equals(Object o) {
-		if(o==null){
+		if (o == null) {
 			return false;
 		}
-		GotyeUser user=(GotyeUser) o;
-		return user.name.equals(gotyeUser.name);
+		if (o instanceof GotyeUser) {
+			GotyeUser user = (GotyeUser) o;
+			return user.getName().equals(gotyeUser.getName());
+		} else {
+			return false;
+		}
+
 	}
 }

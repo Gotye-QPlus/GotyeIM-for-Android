@@ -32,7 +32,6 @@ public class ChangeGroupOwnerDialog extends Dialog implements
 
 	public ChangeGroupOwnerDialog(Context context) {
 		super(context);
-		// TODO Auto-generated constructor stub
 	}
 
 	ListView listview;
